@@ -66,7 +66,7 @@ def _row_to_dict(row: dict) -> Optional[dict]:
     if row is None:
         return None
     row = dict(row)
-    for field in ("justifications", "strengths", "weaknesses", "raw_response"):
+    for field in ("justifications", "strengths", "weaknesses", "spelling_errors", "raw_response"):
         if field in row:
             row[field] = _deserialize_json(row[field])
     # Convert datetime objects to ISO strings for JSON-safety

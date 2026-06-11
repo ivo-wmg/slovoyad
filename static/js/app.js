@@ -320,15 +320,15 @@
         // Spelling Errors
         renderSpellingErrors(evaluation);
 
-        // Reset collapsible states
-        justificationsToggle.setAttribute('aria-expanded', 'false');
-        justificationsContent.classList.remove('open');
-        historyToggle.setAttribute('aria-expanded', 'false');
-        historyContent.classList.remove('open');
-        aiDetectionToggle.setAttribute('aria-expanded', 'false');
-        aiDetectionContent.classList.remove('open');
-        spellingToggle.setAttribute('aria-expanded', 'false');
-        spellingContent.classList.remove('open');
+        // Open all collapsible sections by default
+        justificationsToggle.setAttribute('aria-expanded', 'true');
+        justificationsContent.classList.add('open');
+        historyToggle.setAttribute('aria-expanded', 'true');
+        historyContent.classList.add('open');
+        aiDetectionToggle.setAttribute('aria-expanded', 'true');
+        aiDetectionContent.classList.add('open');
+        spellingToggle.setAttribute('aria-expanded', 'true');
+        spellingContent.classList.add('open');
 
         // Version History
         renderVersionHistory(data, evaluation);
