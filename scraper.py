@@ -56,6 +56,20 @@ class ScrapingError(Exception):
 # Internal helpers
 # ---------------------------------------------------------------------------
 
+import re
+
+_MULTI_SPACE = re.compile(r'[ \t]+')
+_MULTI_NEWLINE = re.compile(r'\n{3,}')
+
+
+def _clean_paragraph(tag) -> str:
+    """Extract text from a BS4 tag, adding spaces between child elements
+    to prevent word merging (e.g. <a>нещо</a>е → 'нещо е' not 'нещое').
+    """
+    text = tag.get_text(separator=' ')
+    text = _MULTI_SPACE.sub(' ', text)
+    return text.strip()
+
 
 def _fetch_html(url: str) -> str:
     """Download raw HTML with proper headers and timeout."""
@@ -131,11 +145,22 @@ def _extract_via_bs4(html: str) -> dict:
     for selector in _ARTICLE_SELECTORS:
         container = soup.select_one(selector)
         if container:
+            # Remove related-articles, widgets, sidebars, nav blocks
+            for junk in container.select(
+                '.related, .related-articles, .related-posts, '
+                '.read-more, .see-also, .widget, .sidebar, '
+                '.article-tags, .tags, .share, .social, '
+                'aside, nav, .newsletter, .promo, .ad, '
+                '[class*="related"], [class*="widget"], '
+                '[class*="sidebar"], [class*="promo"]'
+            ):
+                junk.decompose()
+
             paragraphs = container.find_all("p")
             if paragraphs:
-                text = "\n\n".join(p.get_text(strip=True) for p in paragraphs)
+                text = "\n\n".join(_clean_paragraph(p) for p in paragraphs)
             else:
-                text = container.get_text(separator="\n", strip=True)
+                text = container.get_text(separator=" ", strip=True)
             if len(text) >= _MIN_TEXT_LENGTH:
                 break
 
@@ -143,7 +168,7 @@ def _extract_via_bs4(html: str) -> dict:
     if len(text) < _MIN_TEXT_LENGTH:
         all_paragraphs = soup.find_all("p")
         if all_paragraphs:
-            text = "\n\n".join(p.get_text(strip=True) for p in all_paragraphs)
+            text = "\n\n".join(_clean_paragraph(p) for p in all_paragraphs)
 
     return {
         "title": title,
