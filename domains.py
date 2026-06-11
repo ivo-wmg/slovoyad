@@ -81,6 +81,10 @@ DOMAIN_REGISTRY: Dict[str, DomainConfig] = {
             "НЕ по стандартите за обективна новина. Субективният тон "
             "при коментар е легитимен."
         ),
+        weight_overrides={
+            "significance": 0.20,
+            "domain_specific": 0.25,
+        },
     ),
 
     # 2 ─ money.bg ─────────────────────────────────────────────────────────
@@ -98,6 +102,10 @@ DOMAIN_REGISTRY: Dict[str, DomainConfig] = {
             "• Оценявай наличието на контекст: сравнения с предходни "
             "периоди, прогнози, мнения на анализатори."
         ),
+        weight_overrides={
+            "significance": 0.15,
+            "domain_specific": 0.30,
+        },
     ),
 
     # 3 ─ infostock.bg ─────────────────────────────────────────────────────

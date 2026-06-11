@@ -12,35 +12,43 @@ from typing import Optional, List
 class ArticleEvaluation(BaseModel):
     """The complete evaluation schema that Gemini must return.
     
-    Field names are kept flat (no nesting) for compatibility with
-    Gemini structured output and the database layer.
+    Field order follows Chain of Thought: reasoning first, then scores.
+    This helps LLMs produce more accurate evaluations.
     """
     domain: str = Field(description="Домейнът на оценяваната статия")
     title_scraped: str = Field(description="Заглавието на статията")
-    classification: str = Field(description="Класификация: Translation / Original Report / Opinion / Summary")
+    classification: str = Field(description="Класификация: Translation / Original Report / Opinion / Summary / Interview")
 
-    # --- Scores (1-10) ---
-    originality: int = Field(ge=1, le=10, description="Авторство и Уникалност (1-10)")
-    significance_locality: int = Field(ge=1, le=10, description="Значимост и Локалност (1-10)")
-    quality_and_depth: int = Field(ge=1, le=10, description="Качество, Дължина и Четемост (1-10)")
-    trust_and_sources: int = Field(ge=1, le=10, description="Достоверност (1-10)")
-    domain_specific_score: int = Field(ge=1, le=10, description="Специфична ниша (1-10)")
-
-    final_overall_score: float = Field(ge=1.0, le=10.0, description="Претеглена обща оценка")
-
-    # --- Justifications ---
+    # --- Reasoning FIRST, then scores (Chain of Thought) ---
     originality_reason: str = Field(description="Обяснение за оценката за оригиналност")
+    originality: int = Field(ge=1, le=10, description="Авторство и Уникалност (1-10)")
+
     significance_reason: str = Field(description="Обяснение за оценката за значимост и локалност")
+    significance_locality: int = Field(ge=1, le=10, description="Значимост и Локалност (1-10)")
+
+    quality_reason: str = Field(description="Обяснение за оценката за качество и дълбочина")
+    quality_and_depth: int = Field(ge=1, le=10, description="Качество, Дължина и Четемост (1-10)")
+
+    trust_reason: str = Field(description="Обяснение за оценката за доверие и източници")
+    trust_and_sources: int = Field(ge=1, le=10, description="Достоверност (1-10)")
+
     domain_specific_reason: str = Field(description="Как статията отговаря на специфичните критерии за този уебсайт")
+    domain_specific_score: int = Field(ge=1, le=10, description="Специфична ниша (1-10)")
 
     # --- Lists ---
     strengths: List[str] = Field(description="Силни страни на статията")
     weaknesses: List[str] = Field(description="Слаби страни на статията")
 
     # --- AI Detection ---
-    ai_probability: int = Field(ge=0, le=100, description="Вероятност статията да е AI-генерирана (0-100%)")
-    ai_reasoning: str = Field(description="Обяснение за AI вероятността")
-    spelling_errors: List[str] = Field(default_factory=list, description="Конкретни правописни грешки")
+    ai_probability: int = Field(ge=0, le=100, description="Стилистични AI маркери (0-100%)")
+    ai_reasoning: str = Field(description="Обяснение за наличието на AI стилистични маркери")
+    spelling_errors: List[str] = Field(default_factory=list, description="Конкретни правописни грешки (макс. 5)")
+
+    # --- Confidence ---
+    confidence: int = Field(ge=0, le=100, description="Увереност на оценителя (0-100)")
+
+    # --- Final score LAST (Chain of Thought) ---
+    final_overall_score: float = Field(ge=1.0, le=10.0, description="Претеглена обща оценка")
 
 
 # --- API Response Models ---

@@ -165,6 +165,10 @@
                         ${score != null ? score.toFixed(1) : '—'}
                     </div>
                 </div>
+                ${ev.confidence != null ? `
+                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+                    Увереност: <span style="color: ${ev.confidence >= 80 ? '#10b981' : ev.confidence >= 50 ? '#f59e0b' : '#ef4444'}; font-weight: 600;">${ev.confidence}%</span>
+                </div>` : ''}
             </div>`;
 
             // Strengths & Weaknesses

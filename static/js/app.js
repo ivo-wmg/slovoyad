@@ -281,6 +281,18 @@
         overallScoreValue.textContent = overall.toFixed(2);
         animateScoreRing(overall);
 
+        // Confidence
+        const confIndicator = document.getElementById('confidence-indicator');
+        const confValue = document.getElementById('confidence-value');
+        if (evaluation.confidence != null && confIndicator && confValue) {
+            const conf = evaluation.confidence;
+            confValue.textContent = conf + '%';
+            confValue.style.color = conf >= 80 ? '#10b981' : conf >= 50 ? '#f59e0b' : '#ef4444';
+            confIndicator.classList.remove('hidden');
+        } else if (confIndicator) {
+            confIndicator.classList.add('hidden');
+        }
+
         // Strengths
         strengthsList.innerHTML = '';
         (evaluation.strengths || []).forEach(s => {
@@ -299,7 +311,7 @@
 
         // Justifications
         justificationsList.innerHTML = '';
-        const justKeys = ['originality_reason', 'significance_reason', 'domain_specific_reason'];
+        const justKeys = ['originality_reason', 'significance_reason', 'quality_reason', 'trust_reason', 'domain_specific_reason'];
         justKeys.forEach(key => {
             const text = evaluation[key];
             if (text) {
