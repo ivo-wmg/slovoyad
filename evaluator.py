@@ -1,7 +1,6 @@
 """
 Slovoyad Article Evaluator - Gemini API client for structured article evaluation.
 """
-from __future__ import annotations
 
 import json
 import time

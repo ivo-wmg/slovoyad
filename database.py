@@ -4,11 +4,11 @@ Slovoyad – MariaDB persistence layer.
 Stores article evaluations with versioning: the same URL can be evaluated
 multiple times, each receiving an auto-incrementing version number.
 """
-from __future__ import annotations
 
 import hashlib
 import json
 from datetime import datetime
+from typing import Dict, List, Optional
 
 import pymysql
 import pymysql.cursors
@@ -61,7 +61,7 @@ def _deserialize_json(value):
     return json.loads(value)
 
 
-def _row_to_dict(row: dict) -> dict:
+def _row_to_dict(row: dict) -> Optional[dict]:
     """Convert a raw DB row into a friendlier Python dict."""
     if row is None:
         return None
@@ -151,7 +151,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
         conn.close()
 
 
-def get_latest_evaluation(url: str) -> dict | None:
+def get_latest_evaluation(url: str) -> Optional[dict]:
     """Return the most recent evaluation for *url*, or ``None``."""
     url_h = _url_hash(url)
     conn = get_connection()
@@ -169,7 +169,7 @@ def get_latest_evaluation(url: str) -> dict | None:
         conn.close()
 
 
-def get_all_versions(url: str) -> list[dict]:
+def get_all_versions(url: str) -> List[dict]:
     """Return every evaluation for *url*, newest version first."""
     url_h = _url_hash(url)
     conn = get_connection()

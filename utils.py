@@ -2,9 +2,9 @@
 Slovoyad — Utility Functions
 URL parsing, logging setup, and display helpers.
 """
-from __future__ import annotations
 
 import logging
+from typing import Tuple
 from urllib.parse import urlparse
 
 # --- Logging ---
@@ -50,7 +50,7 @@ def extract_domain(url: str) -> str:
     return hostname.lower()
 
 
-def validate_url(url: str) -> tuple[bool, str]:
+def validate_url(url: str) -> Tuple[bool, str]:
     """
     Validate a URL and return (is_valid, error_message).
     """

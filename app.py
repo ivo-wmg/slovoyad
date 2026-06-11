@@ -2,7 +2,6 @@
 Slovoyad — Article Evaluation Web App
 FastAPI application with evaluation, history, and deploy endpoints.
 """
-from __future__ import annotations
 
 import os
 import hmac
