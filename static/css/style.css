@@ -247,14 +247,14 @@ body {
 }
 
 /* Domain-specific accent colors */
+.domain-chip[data-domain="news.bg"] { --domain-accent: #3b82f6; }
 .domain-chip[data-domain="money.bg"] { --domain-accent: #f59e0b; }
-.domain-chip[data-domain="dnevnik.bg"] { --domain-accent: #3b82f6; }
-.domain-chip[data-domain="capital.bg"] { --domain-accent: #ef4444; }
-.domain-chip[data-domain="mediapool.bg"] { --domain-accent: #10b981; }
-.domain-chip[data-domain="investor.bg"] { --domain-accent: #8b5cf6; }
-.domain-chip[data-domain="bloomberg.bg"] { --domain-accent: #06b6d4; }
-.domain-chip[data-domain="economy.bg"] { --domain-accent: #f97316; }
-.domain-chip[data-domain="forbes.bg"] { --domain-accent: #ec4899; }
+.domain-chip[data-domain="infostock.bg"] { --domain-accent: #8b5cf6; }
+.domain-chip[data-domain="topsport.bg"] { --domain-accent: #22c55e; }
+.domain-chip[data-domain="lifestyle.bg"] { --domain-accent: #ec4899; }
+.domain-chip[data-domain="chr.bg"] { --domain-accent: #06b6d4; }
+.domain-chip[data-domain="webcafe.bg"] { --domain-accent: #f97316; }
+.domain-chip[data-domain="mamamia.bg"] { --domain-accent: #ef4444; }
 
 .domain-chip:hover {
     border-color: var(--domain-accent, rgba(99, 102, 241, 0.3));
@@ -294,12 +294,70 @@ body {
     margin-bottom: 1.5rem;
 }
 
+.article-meta-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.85rem;
+}
+
 .article-title {
     font-size: 1.35rem;
     font-weight: 700;
     line-height: 1.4;
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.35rem;
     color: var(--text-primary);
+}
+
+.article-url {
+    display: inline-block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    word-break: break-all;
+    transition: color var(--transition);
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.article-url:hover {
+    color: var(--accent-secondary);
+}
+
+.export-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-sm);
+    color: var(--accent-secondary);
+    font-family: var(--font);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.export-pdf-btn:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    transform: translateY(-1px);
+}
+
+.export-pdf-btn:active {
+    transform: scale(0.96);
+}
+
+.pdf-icon {
+    font-size: 1rem;
 }
 
 .meta-badges {

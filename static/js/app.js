@@ -16,9 +16,11 @@
     const resultsSection = document.getElementById('results-section');
 
     const articleTitle = document.getElementById('article-title');
+    const articleUrl = document.getElementById('article-url');
     const domainBadge = document.getElementById('domain-badge');
     const versionBadge = document.getElementById('version-badge');
     const classificationBadge = document.getElementById('classification-badge');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
 
     const scoreCardsContainer = document.getElementById('score-cards');
     const overallScoreValue = document.getElementById('overall-score-value');
@@ -234,6 +236,12 @@
         // Article Meta
         articleTitle.textContent = evaluation.title_scraped || 'Без заглавие';
 
+        // Article URL
+        const evalUrl = current.url || '';
+        articleUrl.textContent = evalUrl;
+        articleUrl.href = evalUrl;
+        articleUrl.title = evalUrl;
+
         const domainColor = DOMAIN_COLORS[evaluation.domain] || '#6366f1';
         domainBadge.textContent = evaluation.domain;
         domainBadge.style.background = `${domainColor}22`;
@@ -441,6 +449,40 @@
         } finally {
             hideLoading();
         }
+    // --- PDF Export ---
+    exportPdfBtn.addEventListener('click', () => {
+        const element = document.getElementById('results-section');
+        const title = articleTitle.textContent || 'slovoyad-report';
+        const safeName = title.substring(0, 50).replace(/[^a-zA-Zа-яА-Я0-9\s]/g, '').trim().replace(/\s+/g, '_');
+
+        // Temporarily expand collapsibles for PDF
+        const justWasOpen = justificationsContent.classList.contains('open');
+        const histWasOpen = historyContent.classList.contains('open');
+        justificationsContent.classList.add('open');
+        justificationsToggle.setAttribute('aria-expanded', 'true');
+
+        exportPdfBtn.style.display = 'none';
+
+        const opt = {
+            margin:       [10, 10, 10, 10],
+            filename:     `slovoyad_${safeName}.pdf`,
+            image:        { type: 'jpeg', quality: 0.95 },
+            html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0a0a0f' },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Restore collapsible states
+            if (!justWasOpen) {
+                justificationsContent.classList.remove('open');
+                justificationsToggle.setAttribute('aria-expanded', 'false');
+            }
+            if (!histWasOpen) {
+                historyContent.classList.remove('open');
+                historyToggle.setAttribute('aria-expanded', 'false');
+            }
+            exportPdfBtn.style.display = '';
+        });
     });
 
 })();

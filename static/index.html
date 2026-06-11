@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -75,7 +76,15 @@
         <section id="results-section" class="results-section hidden">
             <!-- Article Meta -->
             <div class="article-meta glass-card fade-in">
-                <h2 id="article-title" class="article-title"></h2>
+                <div class="article-meta-header">
+                    <div>
+                        <h2 id="article-title" class="article-title"></h2>
+                        <a id="article-url" class="article-url" href="#" target="_blank" rel="noopener"></a>
+                    </div>
+                    <button id="export-pdf-btn" class="export-pdf-btn" title="Експорт в PDF">
+                        <span class="pdf-icon">📄</span> PDF
+                    </button>
+                </div>
                 <div class="meta-badges">
                     <span id="domain-badge" class="domain-badge"></span>
                     <span id="version-badge" class="version-badge"></span>
