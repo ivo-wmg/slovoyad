@@ -148,8 +148,12 @@
             </div>`;
 
             // Strengths & Weaknesses
-            const strengths = ev.strengths || [];
-            const weaknesses = ev.weaknesses || [];
+            let strengths = ev.strengths || [];
+            let weaknesses = ev.weaknesses || [];
+            if (typeof strengths === 'string') { try { strengths = JSON.parse(strengths); } catch(e) { strengths = []; } }
+            if (typeof weaknesses === 'string') { try { weaknesses = JSON.parse(weaknesses); } catch(e) { weaknesses = []; } }
+            if (!Array.isArray(strengths)) strengths = [];
+            if (!Array.isArray(weaknesses)) weaknesses = [];
             if (strengths.length || weaknesses.length) {
                 html += `<div class="sw-grid fade-in">`;
                 html += `
@@ -171,9 +175,11 @@
                 html += `</div>`;
             }
 
-            // Justifications
+            // Justifications — stored as JSON object in ev.justifications
+            let justs = ev.justifications || {};
+            if (typeof justs === 'string') { try { justs = JSON.parse(justs); } catch(e) { justs = {}; } }
             const justKeys = Object.keys(JUSTIFICATION_LABELS);
-            const hasJustifications = justKeys.some(k => ev[k]);
+            const hasJustifications = justKeys.some(k => justs[k]);
             if (hasJustifications) {
                 html += `
                 <div class="admin-card fade-in">
@@ -183,11 +189,11 @@
                     </div>
                     <div class="collapsible-body" style="max-height: 0; overflow: hidden; transition: max-height 0.4s ease;">
                         ${justKeys.map(k => {
-                            if (!ev[k]) return '';
+                            if (!justs[k]) return '';
                             return `
                             <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 0.5rem;">
                                 <div style="font-weight: 600; color: var(--accent-secondary); margin-bottom: 0.5rem; font-size: 0.9rem;">${JUSTIFICATION_LABELS[k]}</div>
-                                <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">${escapeHtml(ev[k])}</p>
+                                <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">${escapeHtml(justs[k])}</p>
                             </div>`;
                         }).join('')}
                     </div>
@@ -197,8 +203,8 @@
             // AI Detection
             if (ev.ai_probability != null || ev.ai_detection_reasoning) {
                 const aiProb = ev.ai_probability != null ? ev.ai_probability : 0;
-                const aiPct = Math.round(aiProb * 100);
-                const aiColor = aiProb > 0.7 ? '#ef4444' : aiProb > 0.4 ? '#f59e0b' : '#10b981';
+                const aiPct = Math.round(aiProb);  // already in percent (0-100)
+                const aiColor = aiProb > 70 ? '#ef4444' : aiProb > 40 ? '#f59e0b' : '#10b981';
                 html += `
                 <div class="admin-card fade-in">
                     <div class="collapsible-header" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
