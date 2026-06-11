@@ -148,7 +148,8 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                 ),
             )
             conn.commit()
-        return next_version
+            eval_id = cur.lastrowid
+        return next_version, eval_id
     except Exception:
         conn.rollback()
         raise

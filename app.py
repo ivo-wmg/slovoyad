@@ -54,6 +54,26 @@ async def index():
 
 # --- API: Evaluate ---
 
+# --- Public permalink for saved evaluations ---
+
+@app.get("/evaluations/{eval_id}")
+async def public_evaluation(eval_id: int):
+    """Serve the main page for a saved evaluation (public permalink)."""
+    index_path = os.path.join(static_dir, "index.html")
+    return FileResponse(index_path)
+
+
+@app.get("/api/evaluations/{eval_id}")
+async def api_evaluation_public(eval_id: int):
+    """Return a stored evaluation by ID (public, no auth)."""
+    from database import get_evaluation_by_id
+    evaluation = get_evaluation_by_id(eval_id)
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluation not found")
+    return evaluation
+
+
+
 @app.post("/api/evaluate")
 async def api_evaluate(request: EvaluateRequest):
     """
@@ -95,12 +115,13 @@ async def api_evaluate(request: EvaluateRequest):
     # 5. Save to database
     try:
         eval_dict = evaluation.model_dump()
-        version = save_evaluation(url, eval_dict)
-        logger.info(f"Saved evaluation v{version} for {domain}")
+        version, eval_id = save_evaluation(url, eval_dict)
+        logger.info(f"Saved evaluation v{version} id={eval_id} for {domain}")
     except Exception as e:
         logger.error(f"Database save error: {e}")
         # Don't fail the request if DB save fails — return the evaluation anyway
         version = 0
+        eval_id = None
 
     # 6. Build response with version history
     try:
@@ -110,6 +131,7 @@ async def api_evaluate(request: EvaluateRequest):
             version=version,
             evaluated_at=all_versions[0]["evaluated_at"] if all_versions else "",
             url=url,
+            id=eval_id,
         )
 
         previous_responses = []

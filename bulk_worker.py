@@ -78,7 +78,7 @@ def _process_queue():
 
             # Save to DB
             eval_dict = evaluation.model_dump()
-            version = save_evaluation(url, eval_dict)
+            version, _ = save_evaluation(url, eval_dict)
 
             # Get the evaluation ID and link it to the group
             conn = get_connection()

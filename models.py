@@ -51,6 +51,7 @@ class EvaluationResponse(BaseModel):
     version: int
     evaluated_at: str
     url: str
+    id: Optional[int] = None
 
 
 class VersionHistoryResponse(BaseModel):

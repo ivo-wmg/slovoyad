@@ -336,6 +336,12 @@
         // Show results
         resultsSection.classList.remove('hidden');
 
+        // Show copy link button if eval has an ID
+        currentEvalId = current.id || null;
+        if (currentEvalId && copyLinkBtn) {
+            copyLinkBtn.style.display = '';
+        }
+
         // Re-trigger animations
         resultsSection.querySelectorAll('.fade-in').forEach(el => {
             el.style.animation = 'none';
@@ -580,6 +586,70 @@
 
             spellingErrorsList.appendChild(item);
         });
+    }
+    // --- Copy Link ---
+    let currentEvalId = null;
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+
+    copyLinkBtn.addEventListener('click', () => {
+        if (!currentEvalId) return;
+        const url = `${window.location.origin}/evaluations/${currentEvalId}`;
+        navigator.clipboard.writeText(url).then(() => {
+            const orig = copyLinkBtn.innerHTML;
+            copyLinkBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Копиран!';
+            setTimeout(() => { copyLinkBtn.innerHTML = orig; }, 2000);
+        });
+    });
+
+    // --- Permalink: auto-load saved evaluation ---
+    const pathMatch = window.location.pathname.match(/^\/evaluations\/(\d+)$/);
+    if (pathMatch) {
+        const evalId = pathMatch[1];
+        (async () => {
+            showLoading();
+            try {
+                const ev = await fetch(`/api/evaluations/${evalId}`).then(r => {
+                    if (!r.ok) throw new Error('Evaluation not found');
+                    return r.json();
+                });
+
+                // Parse JSON strings from DB
+                if (typeof ev.justifications === 'string') {
+                    try { ev.justifications = JSON.parse(ev.justifications); } catch(e) {}
+                }
+                if (typeof ev.strengths === 'string') {
+                    try { ev.strengths = JSON.parse(ev.strengths); } catch(e) {}
+                }
+                if (typeof ev.weaknesses === 'string') {
+                    try { ev.weaknesses = JSON.parse(ev.weaknesses); } catch(e) {}
+                }
+                if (typeof ev.spelling_errors === 'string') {
+                    try { ev.spelling_errors = JSON.parse(ev.spelling_errors); } catch(e) {}
+                }
+
+                // Flatten justifications into evaluation
+                const justs = ev.justifications || {};
+                Object.assign(ev, justs);
+
+                // Build data structure that renderResults expects
+                const data = {
+                    current: {
+                        url: ev.url,
+                        version: ev.version || 1,
+                        id: ev.id,
+                        evaluation: ev,
+                        evaluated_at: ev.evaluated_at,
+                    },
+                    versions: [{ version: ev.version || 1, evaluated_at: ev.evaluated_at }]
+                };
+
+                renderResults(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                hideLoading();
+            }
+        })();
     }
 
 })();
