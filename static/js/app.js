@@ -38,6 +38,19 @@
     const versionHistoryList = document.getElementById('version-history-list');
     const versionHistorySection = document.getElementById('version-history-section');
 
+    const aiDetectionToggle = document.getElementById('ai-detection-toggle');
+    const aiDetectionContent = document.getElementById('ai-detection-content');
+    const aiDetectionSection = document.getElementById('ai-detection-section');
+    const aiProbabilityValue = document.getElementById('ai-probability-value');
+    const aiProbabilityFill = document.getElementById('ai-probability-fill');
+    const aiReasoning = document.getElementById('ai-reasoning');
+
+    const spellingToggle = document.getElementById('spelling-toggle');
+    const spellingContent = document.getElementById('spelling-content');
+    const spellingErrorsSection = document.getElementById('spelling-errors-section');
+    const spellingErrorsList = document.getElementById('spelling-errors-list');
+    const spellingNone = document.getElementById('spelling-none');
+
     // --- Score label mapping (Bulgarian) ---
     const SCORE_LABELS = {
         domain_specific_score: 'Ниша',
@@ -200,6 +213,8 @@
 
     setupCollapsible(justificationsToggle, justificationsContent);
     setupCollapsible(historyToggle, historyContent);
+    setupCollapsible(aiDetectionToggle, aiDetectionContent);
+    setupCollapsible(spellingToggle, spellingContent);
 
     // --- Error Toast ---
     function showError(message) {
@@ -299,11 +314,21 @@
             }
         });
 
+        // AI Detection
+        renderAiDetection(evaluation);
+
+        // Spelling Errors
+        renderSpellingErrors(evaluation);
+
         // Reset collapsible states
         justificationsToggle.setAttribute('aria-expanded', 'false');
         justificationsContent.classList.remove('open');
         historyToggle.setAttribute('aria-expanded', 'false');
         historyContent.classList.remove('open');
+        aiDetectionToggle.setAttribute('aria-expanded', 'false');
+        aiDetectionContent.classList.remove('open');
+        spellingToggle.setAttribute('aria-expanded', 'false');
+        spellingContent.classList.remove('open');
 
         // Version History
         renderVersionHistory(data, evaluation);
@@ -455,35 +480,113 @@
     exportPdfBtn.addEventListener('click', () => {
         const element = document.getElementById('results-section');
         const title = articleTitle.textContent || 'slovoyad-report';
-        const safeName = title.substring(0, 50).replace(/[^a-zA-Z\u0430-\u044f\u0410-\u042f0-9\s]/g, '').trim().replace(/\s+/g, '_');
+        const safeName = title.substring(0, 50).replace(/[^a-zA-Z\u0430-\u044f\u0410-\u042f0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'report';
 
-        // Temporarily expand collapsibles for PDF
-        const justWasOpen = justificationsContent.classList.contains('open');
-        const histWasOpen = historyContent.classList.contains('open');
-        justificationsContent.classList.add('open');
-        justificationsToggle.setAttribute('aria-expanded', 'true');
+        // Expand all collapsibles for PDF
+        const collapsibles = document.querySelectorAll('.collapsible-content');
+        const toggles = document.querySelectorAll('.collapsible-header');
+        const wasOpen = [];
+        collapsibles.forEach((el, i) => {
+            wasOpen.push(el.classList.contains('open'));
+            el.classList.add('open');
+            if (toggles[i]) toggles[i].setAttribute('aria-expanded', 'true');
+        });
 
         exportPdfBtn.style.display = 'none';
 
-        const opt = {
-            margin:       [10, 10, 10, 10],
-            filename:     `slovoyad_${safeName}.pdf`,
-            image:        { type: 'jpeg', quality: 0.95 },
-            html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0a0a0f' },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        html2pdf().set(opt).from(element).save().then(() => {
-            if (!justWasOpen) {
-                justificationsContent.classList.remove('open');
-                justificationsToggle.setAttribute('aria-expanded', 'false');
-            }
-            if (!histWasOpen) {
-                historyContent.classList.remove('open');
-                historyToggle.setAttribute('aria-expanded', 'false');
-            }
+        html2pdf().set({
+            margin: [8, 6, 8, 6],
+            filename: `slovoyad_${safeName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: '#0a0a0f',
+                letterRendering: true,
+                logging: false
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        }).from(element).save().then(() => {
+            collapsibles.forEach((el, i) => {
+                if (!wasOpen[i]) {
+                    el.classList.remove('open');
+                    if (toggles[i]) toggles[i].setAttribute('aria-expanded', 'false');
+                }
+            });
             exportPdfBtn.style.display = '';
         });
     });
+
+    // --- AI Detection ---
+    function renderAiDetection(evaluation) {
+        const prob = evaluation.ai_probability;
+        const reasoning = evaluation.ai_reasoning;
+
+        if (prob == null && !reasoning) {
+            aiDetectionSection.classList.add('hidden');
+            return;
+        }
+
+        aiDetectionSection.classList.remove('hidden');
+
+        if (prob != null) {
+            const pct = prob;
+            aiProbabilityValue.textContent = `${pct}%`;
+            // Color the value based on probability
+            if (pct >= 70) {
+                aiProbabilityValue.style.color = 'var(--red)';
+            } else if (pct >= 40) {
+                aiProbabilityValue.style.color = 'var(--yellow)';
+            } else {
+                aiProbabilityValue.style.color = 'var(--green)';
+            }
+            // Animate fill bar
+            requestAnimationFrame(() => {
+                aiProbabilityFill.style.width = `${pct}%`;
+            });
+        } else {
+            aiProbabilityValue.textContent = '—';
+            aiProbabilityFill.style.width = '0%';
+        }
+
+        aiReasoning.textContent = reasoning || '';
+    }
+
+    // --- Spelling Errors ---
+    function renderSpellingErrors(evaluation) {
+        const errors = evaluation.spelling_errors;
+
+        if (!errors || errors.length === 0) {
+            spellingErrorsList.innerHTML = '';
+            spellingNone.classList.remove('hidden');
+            spellingErrorsSection.classList.remove('hidden');
+            return;
+        }
+
+        spellingNone.classList.add('hidden');
+        spellingErrorsSection.classList.remove('hidden');
+        spellingErrorsList.innerHTML = '';
+
+        errors.forEach(err => {
+            const item = document.createElement('div');
+            item.className = 'spelling-error-item';
+
+            const word = err.word || err.original || '';
+            const suggestion = err.suggestion || err.correct || '';
+            const context = err.context || '';
+
+            let html = `<span class="spelling-error-word">${escapeHtml(word)}</span>`;
+            if (suggestion) {
+                html += ` <span class="spelling-error-suggestion">→ ${escapeHtml(suggestion)}</span>`;
+            }
+            if (context) {
+                html += `<span class="spelling-error-context"> — ${escapeHtml(context)}</span>`;
+            }
+
+            item.innerHTML = html;
+            spellingErrorsList.appendChild(item);
+        });
+    }
 
 })();

@@ -294,19 +294,14 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.article-meta-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.85rem;
+.article-title {
+    margin-bottom: 0.35rem;
 }
 
-.article-title {
+.article-meta .article-title {
     font-size: 1.35rem;
     font-weight: 700;
     line-height: 1.4;
-    margin-bottom: 0.35rem;
     color: var(--text-primary);
 }
 
@@ -330,26 +325,25 @@ body {
 .export-pdf-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    border-radius: var(--radius-sm);
-    color: var(--accent-secondary);
-    font-family: var(--font);
-    font-size: 0.8rem;
+    gap: 0.3rem;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.75rem;
     font-weight: 600;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-family: var(--font);
     cursor: pointer;
     transition: all var(--transition);
     white-space: nowrap;
-    flex-shrink: 0;
 }
 
 .export-pdf-btn:hover {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
-    border-color: rgba(99, 102, 241, 0.5);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
-    transform: translateY(-1px);
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: var(--accent-secondary);
 }
 
 .export-pdf-btn:active {
@@ -929,5 +923,245 @@ body {
 
     .version-overall {
         margin-left: 0;
+    }
+}
+
+/* --- AI Detection Section --- */
+.ai-detection-section {
+    margin-bottom: 1.5rem;
+}
+
+.ai-probability-bar-wrapper {
+    margin-bottom: 1rem;
+}
+
+.ai-probability-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.ai-probability-value {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.ai-probability-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.ai-probability-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ai-reasoning {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    padding: 0.9rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.ai-reasoning:empty {
+    display: none;
+}
+
+/* --- Spelling Errors Section --- */
+.spelling-errors-section {
+    margin-bottom: 1.5rem;
+}
+
+.spelling-errors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.spelling-error-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    border-left: 3px solid var(--red);
+}
+
+.spelling-error-word {
+    font-weight: 700;
+    color: var(--red);
+    font-family: monospace;
+    white-space: nowrap;
+}
+
+.spelling-error-suggestion {
+    color: var(--green);
+    font-weight: 600;
+}
+
+.spelling-error-context {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.spelling-none {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* --- Print Styles --- */
+@media print {
+    body {
+        background: #fff !important;
+        background-image: none !important;
+        color: #111 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .header-glow,
+    .loading-overlay,
+    .error-toast,
+    .input-section,
+    .export-pdf-btn {
+        display: none !important;
+    }
+
+    .app-wrapper {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .header {
+        padding: 1rem 0 0.5rem;
+    }
+
+    .logo {
+        font-size: 2rem;
+        background: none;
+        -webkit-text-fill-color: #111;
+        color: #111;
+    }
+
+    .subtitle {
+        color: #555;
+    }
+
+    .glass-card,
+    .version-history-section {
+        background: #fff !important;
+        border: 1px solid #ddd !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+    }
+
+    .glass-card:hover {
+        background: #fff !important;
+    }
+
+    .results-section {
+        margin-top: 1rem;
+    }
+
+    .score-card {
+        background: #f9f9f9 !important;
+        border: 1px solid #ddd !important;
+        backdrop-filter: none !important;
+    }
+
+    .score-card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .article-title,
+    .sw-title,
+    .collapsible-header {
+        color: #111 !important;
+    }
+
+    .article-url {
+        color: #555 !important;
+    }
+
+    .meta-badges .domain-badge,
+    .meta-badges .version-badge,
+    .meta-badges .classification-badge {
+        border: 1px solid #ccc !important;
+        background: #f0f0f0 !important;
+        color: #333 !important;
+    }
+
+    .collapsible-content {
+        max-height: none !important;
+        overflow: visible !important;
+        padding-top: 1rem !important;
+    }
+
+    .collapse-icon {
+        display: none !important;
+    }
+
+    .overall-score-section::before {
+        display: none;
+    }
+
+    .overall-score-value {
+        background: none;
+        -webkit-text-fill-color: #111;
+        color: #111;
+    }
+
+    .overall-label {
+        color: #555 !important;
+    }
+
+    .sw-list li,
+    .justification-text,
+    .ai-reasoning,
+    .version-score-item,
+    .version-number {
+        color: #333 !important;
+    }
+
+    .justification-label {
+        color: #444 !important;
+    }
+
+    .ai-probability-label,
+    .spelling-none {
+        color: #555 !important;
+    }
+
+    .ai-probability-track {
+        background: #e0e0e0 !important;
+    }
+
+    .version-card {
+        background: #f9f9f9 !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .fade-in {
+        animation: none !important;
+    }
+
+    a {
+        text-decoration: underline !important;
     }
 }

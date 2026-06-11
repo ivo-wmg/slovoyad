@@ -76,20 +76,16 @@
         <section id="results-section" class="results-section hidden">
             <!-- Article Meta -->
             <div class="article-meta glass-card fade-in">
-                <div class="article-meta-header">
-                    <div>
-                        <h2 id="article-title" class="article-title"></h2>
-                        <a id="article-url" class="article-url" href="#" target="_blank" rel="noopener"></a>
-                    </div>
-                    <button id="export-pdf-btn" class="export-pdf-btn" title="Експорт в PDF">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-                        Експорт PDF
-                    </button>
-                </div>
+                <h2 id="article-title" class="article-title"></h2>
+                <a id="article-url" class="article-url" href="#" target="_blank" rel="noopener"></a>
                 <div class="meta-badges">
                     <span id="domain-badge" class="domain-badge"></span>
                     <span id="version-badge" class="version-badge"></span>
                     <span id="classification-badge" class="classification-badge"></span>
+                    <button id="export-pdf-btn" class="export-pdf-btn" title="Принтиране / PDF">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                        Печат
+                    </button>
                 </div>
             </div>
 
@@ -130,6 +126,38 @@
                 </button>
                 <div class="collapsible-content" id="justifications-content">
                     <div id="justifications-list" class="justifications-list"></div>
+                </div>
+            </div>
+
+            <!-- AI Detection -->
+            <div class="ai-detection-section glass-card fade-in" id="ai-detection-section">
+                <button class="collapsible-header" id="ai-detection-toggle" aria-expanded="false">
+                    <span>🤖 AI детекция</span>
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="ai-detection-content">
+                    <div class="ai-probability-bar-wrapper">
+                        <div class="ai-probability-label">
+                            <span>Вероятност за AI-генериран текст</span>
+                            <span id="ai-probability-value" class="ai-probability-value">—</span>
+                        </div>
+                        <div class="ai-probability-track">
+                            <div id="ai-probability-fill" class="ai-probability-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="ai-reasoning" class="ai-reasoning"></div>
+                </div>
+            </div>
+
+            <!-- Spelling Errors -->
+            <div class="spelling-errors-section glass-card fade-in" id="spelling-errors-section">
+                <button class="collapsible-header" id="spelling-toggle" aria-expanded="false">
+                    <span>📝 Правописни грешки</span>
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="spelling-content">
+                    <div id="spelling-errors-list" class="spelling-errors-list"></div>
+                    <p id="spelling-none" class="spelling-none hidden">Не са открити правописни грешки.</p>
                 </div>
             </div>
 

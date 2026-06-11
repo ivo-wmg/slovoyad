@@ -37,6 +37,11 @@ class ArticleEvaluation(BaseModel):
     strengths: List[str] = Field(description="Силни страни на статията")
     weaknesses: List[str] = Field(description="Слаби страни на статията")
 
+    # --- AI Detection ---
+    ai_probability: int = Field(ge=0, le=100, description="Вероятност статията да е AI-генерирана (0-100%)")
+    ai_reasoning: str = Field(description="Обяснение за AI вероятността")
+    spelling_errors: List[str] = Field(default_factory=list, description="Конкретни правописни грешки")
+
 
 # --- API Response Models ---
 
