@@ -152,7 +152,8 @@ def _strip_junk_blocks(container):
         '.share, .social, .tags, .article-tags, '
         '.newsletter, .promo, .ad, .comments, '
         '.reference-article, .global-leading-articles-big, '
-        '.global-leading-articles, .related-articles, .related'
+        '.global-leading-articles, .related-articles, .related, '
+        '.article_embed'
     ):
         junk.decompose()
 
