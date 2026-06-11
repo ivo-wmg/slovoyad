@@ -476,46 +476,35 @@
         }
     });
 
-    // --- PDF Export ---
-    exportPdfBtn.addEventListener('click', () => {
-        const element = document.getElementById('results-section');
-        const title = articleTitle.textContent || 'slovoyad-report';
-        const safeName = title.substring(0, 50).replace(/[^a-zA-Z\u0430-\u044f\u0410-\u042f0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'report';
+    // --- PDF Export (server-side) ---
+    exportPdfBtn.addEventListener('click', async () => {
+        const urlEl = document.getElementById('article-url');
+        const articleUrl = urlEl ? urlEl.href : '';
+        if (!articleUrl || articleUrl === '#') return;
 
-        // Expand all collapsibles for PDF
-        const collapsibles = document.querySelectorAll('.collapsible-content');
-        const toggles = document.querySelectorAll('.collapsible-header');
-        const wasOpen = [];
-        collapsibles.forEach((el, i) => {
-            wasOpen.push(el.classList.contains('open'));
-            el.classList.add('open');
-            if (toggles[i]) toggles[i].setAttribute('aria-expanded', 'true');
-        });
+        exportPdfBtn.disabled = true;
+        exportPdfBtn.textContent = '⏳';
 
-        exportPdfBtn.style.display = 'none';
-
-        html2pdf().set({
-            margin: [8, 6, 8, 6],
-            filename: `slovoyad_${safeName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 4,
-                useCORS: true,
-                backgroundColor: '#0a0a0f',
-                letterRendering: true,
-                logging: false
-            },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        }).from(element).save().then(() => {
-            collapsibles.forEach((el, i) => {
-                if (!wasOpen[i]) {
-                    el.classList.remove('open');
-                    if (toggles[i]) toggles[i].setAttribute('aria-expanded', 'false');
-                }
-            });
-            exportPdfBtn.style.display = '';
-        });
+        try {
+            const resp = await fetch(`/api/pdf?url=${encodeURIComponent(articleUrl)}`);
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.detail || 'PDF generation failed');
+            }
+            const blob = await resp.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const disposition = resp.headers.get('Content-Disposition') || '';
+            const match = disposition.match(/filename="?(.+?)"?$/);
+            link.download = match ? match[1] : 'slovoyad_report.pdf';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } catch (err) {
+            showError('PDF грешка: ' + err.message);
+        } finally {
+            exportPdfBtn.disabled = false;
+            exportPdfBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> PDF';
+        }
     });
 
     // --- AI Detection ---

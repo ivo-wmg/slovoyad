@@ -11,7 +11,7 @@ import subprocess
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -187,7 +187,62 @@ async def api_domains():
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "version": "0.1.0", "model": GEMINI_MODEL}
+    return {"status": "ok", "version": "0.2.0", "model": GEMINI_MODEL}
+
+
+# --- API: PDF Export ---
+
+@app.get("/api/pdf")
+async def api_pdf(url: str):
+    """Generate PDF report for the latest evaluation of a URL."""
+    if not url:
+        raise HTTPException(status_code=400, detail="URL parameter is required")
+
+    latest = get_latest_evaluation(url)
+    if not latest:
+        raise HTTPException(status_code=404, detail="No evaluation found for this URL")
+
+    try:
+        from pdf_generator import generate_evaluation_pdf
+
+        eval_dict = dict(latest)
+        # Parse JSON fields
+        for key in ("justifications", "strengths", "weaknesses", "spelling_errors"):
+            val = eval_dict.get(key)
+            if isinstance(val, str):
+                import json as _json
+                try:
+                    eval_dict[key] = _json.loads(val)
+                except Exception:
+                    pass
+
+        # Flatten justifications into eval_dict
+        justs = eval_dict.pop("justifications", {}) or {}
+        if isinstance(justs, dict):
+            eval_dict.update(justs)
+
+        pdf_bytes = generate_evaluation_pdf(
+            eval_data=eval_dict,
+            url=url,
+            version=eval_dict.get("version", 1),
+            evaluated_at=str(eval_dict.get("evaluated_at", "")),
+        )
+
+        title = eval_dict.get("title_scraped", "report")[:40]
+        safe = title.replace(" ", "_").replace('"', '')
+
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="slovoyad_{safe}.pdf"'
+            },
+        )
+    except ImportError:
+        raise HTTPException(status_code=500, detail="PDF generation not available (weasyprint not installed)")
+    except Exception as e:
+        logger.error(f"PDF generation error: {e}")
+        raise HTTPException(status_code=500, detail=f"PDF generation error: {str(e)}")
 
 
 # --- Deploy Webhook ---
@@ -283,4 +338,7 @@ def _db_row_to_evaluation(row: dict) -> ArticleEvaluation:
         domain_specific_reason=justifications.get("domain_specific_reason", ""),
         strengths=strengths if isinstance(strengths, list) else [],
         weaknesses=weaknesses if isinstance(weaknesses, list) else [],
+        ai_probability=row.get("ai_probability", 0),
+        ai_reasoning=row.get("ai_reasoning", ""),
+        spelling_errors=row.get("spelling_errors", []) if isinstance(row.get("spelling_errors"), list) else [],
     )

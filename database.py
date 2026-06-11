@@ -108,6 +108,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     quality_and_depth, trust_and_sources,
                     domain_specific_score, final_overall_score,
                     justifications, strengths, weaknesses,
+                    ai_probability, ai_reasoning, spelling_errors,
                     raw_response
                 ) VALUES (
                     %s, %s, %s, %s,
@@ -115,6 +116,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     %s, %s,
                     %s, %s,
                     %s, %s,
+                    %s, %s, %s,
                     %s, %s, %s,
                     %s
                 )
@@ -139,6 +141,9 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     }),
                     _serialize_json(evaluation.get("strengths")),
                     _serialize_json(evaluation.get("weaknesses")),
+                    evaluation.get("ai_probability", 0),
+                    evaluation.get("ai_reasoning", ""),
+                    _serialize_json(evaluation.get("spelling_errors", [])),
                     _serialize_json(evaluation.get("raw_response")),
                 ),
             )
