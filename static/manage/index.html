@@ -8,24 +8,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/manage/css/admin.css">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
 </head>
 <body>
     <div class="admin-layout">
         <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
         <aside class="admin-sidebar">
             <div class="admin-sidebar-header">
-                <h1 class="admin-logo">СЛОВОЯД</h1>
-                <span class="admin-logo-sub">Админ панел</span>
+                <a href="/manage"><img src="/static/images/logo.png" alt="СЛОВОЯД" style="max-width: 140px; height: auto;"></a>
             </div>
             <nav class="admin-nav">
-                <a href="/manage" class="active">📊 Табло</a>
-                <a href="/manage/evaluations">📋 Оценки</a>
-                <a href="/manage/groups">📁 Групи</a>
-                <a href="/manage/users">👥 Потребители</a>
+                <a href="/manage" class="active"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Табло</a>
+                <a href="/manage/evaluations"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg> Оценки</a>
+                <a href="/manage/groups"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg> Групи</a>
+                <a href="/manage/users"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Потребители</a>
             </nav>
             <div class="admin-sidebar-footer">
-                <a href="/" class="admin-nav-link">← Към сайта</a>
-                <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+                <a href="/" class="admin-nav-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Към сайта</a>
+                <a href="#" id="logout-btn" class="admin-nav-link"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Изход</a>
             </div>
         </aside>
         <main class="admin-content">
@@ -35,25 +35,44 @@
 
             <div class="admin-stats">
                 <div class="admin-stat-card admin-card">
-                    <div class="admin-stat-icon">📋</div>
+                    <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg></div>
                     <div class="admin-stat-value" id="stat-evaluations">—</div>
                     <div class="admin-stat-label">Общо оценки</div>
                 </div>
                 <div class="admin-stat-card admin-card">
-                    <div class="admin-stat-icon">📁</div>
+                    <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></div>
                     <div class="admin-stat-value" id="stat-groups">—</div>
                     <div class="admin-stat-label">Общо групи</div>
                 </div>
                 <div class="admin-stat-card admin-card">
-                    <div class="admin-stat-icon">⚡</div>
+                    <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
                     <div class="admin-stat-value" id="stat-active">—</div>
                     <div class="admin-stat-label">Активни проверки</div>
                 </div>
                 <div class="admin-stat-card admin-card">
-                    <div class="admin-stat-icon">👥</div>
+                    <div class="admin-stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                     <div class="admin-stat-value" id="stat-users">—</div>
                     <div class="admin-stat-label">Потребители</div>
                 </div>
+            </div>
+
+            <!-- Quick Evaluation -->
+            <div class="admin-card" style="margin-bottom: 1.5rem;">
+                <div class="admin-card-header">
+                    <h3>Бърза оценка на статия</h3>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                    <input type="url" id="quick-eval-url" class="admin-input" placeholder="https://..." style="flex: 1; min-width: 280px;">
+                    <button class="admin-btn admin-btn-primary" id="quick-eval-btn" onclick="quickEval()">Оцени</button>
+                </div>
+                <div id="quick-eval-progress" style="display:none; margin-top:0.75rem;">
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                        <div style="width:16px;height:16px;border:2px solid rgba(99,102,241,0.3);border-top-color:#6366f1;border-radius:50%;animation:qspin 0.8s linear infinite;"></div>
+                        <span style="color:var(--text-secondary,#9ca3af); font-size:0.85rem;" id="quick-eval-status">Скрейпване и оценяване...</span>
+                    </div>
+                </div>
+                <div id="quick-eval-error" style="display:none; color:#ef4444; font-size:0.85rem; margin-top:0.5rem;"></div>
+                <style>@keyframes qspin{to{transform:rotate(360deg)}}</style>
             </div>
 
             <div class="admin-grid-2">
@@ -142,7 +161,56 @@
                 `).join('');
             } catch(e) { console.error(e); }
         }
-        document.addEventListener('DOMContentLoaded', loadDashboard);
+        async function quickEval() {
+            const url = document.getElementById('quick-eval-url').value.trim();
+            const errEl = document.getElementById('quick-eval-error');
+            const progressEl = document.getElementById('quick-eval-progress');
+            const btn = document.getElementById('quick-eval-btn');
+            errEl.style.display = 'none';
+
+            if (!url || !url.startsWith('http')) {
+                errEl.textContent = 'Въведете валиден URL';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            progressEl.style.display = 'block';
+
+            try {
+                const resp = await fetch('/api/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Грешка при оценяване');
+                }
+                const data = await resp.json();
+                showToast('Оценката е готова!', 'success');
+                if (data.current && data.current.id) {
+                    window.location.href = '/manage/evaluations/' + data.current.id;
+                } else {
+                    document.getElementById('quick-eval-url').value = '';
+                    progressEl.style.display = 'none';
+                    btn.disabled = false;
+                    loadDashboard();
+                }
+            } catch(e) {
+                errEl.textContent = e.message;
+                errEl.style.display = 'block';
+                progressEl.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSidebar();
+            setupLogout();
+            loadDashboard();
+            document.getElementById('quick-eval-url').addEventListener('keyup', e => { if (e.key === 'Enter') quickEval(); });
+        });
     </script>
 </body>
 </html>

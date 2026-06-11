@@ -179,6 +179,12 @@ body {
     color: var(--accent-secondary);
 }
 
+.admin-nav a svg,
+.admin-nav-link svg {
+    vertical-align: -3px;
+    margin-right: 2px;
+}
+
 /* ---------- Sidebar Footer (Logout) ---------- */
 .admin-sidebar-footer {
     padding: 1rem 0.75rem;

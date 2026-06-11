@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="СЛОВОЯД — Интелигентен анализатор на медийно съдържание. Оценявайте статии от българските медии по оригиналност, качество, доверие и значимост.">
-    <title>СЛОВОЯД — Анализатор на медийно съдържание</title>
+    <meta name="description" content="СЛОВОЯД — Анализ на медийно съдържание. Оценявайте статии от българските медии по оригиналност, качество, доверие и значимост.">
+    <title>СЛОВОЯД — Анализ на новините</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=4">
+    <link rel="stylesheet" href="/static/css/style.css?v=5">
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
 
 </head>
 <body>
@@ -23,7 +24,7 @@
     <!-- Error Message -->
     <div id="error-toast" class="error-toast hidden">
         <div class="error-toast-content">
-            <span class="error-icon">⚠️</span>
+            <span class="error-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
             <span id="error-message" class="error-message"></span>
             <button id="error-close-btn" class="error-close" aria-label="Затвори">&times;</button>
         </div>
@@ -33,8 +34,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-glow"></div>
-            <h1 class="logo">СЛОВОЯД</h1>
-            <p class="subtitle">Анализатор на медийно съдържание</p>
+            <a href="/" style="display:inline-block;"><img src="/static/images/logo.png" alt="СЛОВОЯД" class="logo-img" style="max-width: 340px; height: auto;"></a>
         </header>
 
         <!-- Input Section -->
@@ -116,11 +116,11 @@
             <!-- Strengths & Weaknesses -->
             <div class="sw-grid fade-in">
                 <div class="sw-card glass-card strengths-card">
-                    <h3 class="sw-title strengths-title">✅ Силни страни</h3>
+                    <h3 class="sw-title strengths-title">Силни страни</h3>
                     <ul id="strengths-list" class="sw-list"></ul>
                 </div>
                 <div class="sw-card glass-card weaknesses-card">
-                    <h3 class="sw-title weaknesses-title">❌ Слаби страни</h3>
+                    <h3 class="sw-title weaknesses-title">Слаби страни</h3>
                     <ul id="weaknesses-list" class="sw-list"></ul>
                 </div>
             </div>
@@ -128,7 +128,7 @@
             <!-- Justifications -->
             <div class="justifications-section glass-card fade-in">
                 <button class="collapsible-header" id="justifications-toggle" aria-expanded="false">
-                    <span>📋 Обосновки</span>
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg> Обосновки</span>
                     <span class="collapse-icon">▼</span>
                 </button>
                 <div class="collapsible-content" id="justifications-content">
@@ -139,7 +139,7 @@
             <!-- AI Detection -->
             <div class="ai-detection-section glass-card fade-in" id="ai-detection-section">
                 <button class="collapsible-header" id="ai-detection-toggle" aria-expanded="false">
-                    <span>🤖 AI детекция</span>
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg> AI детекция</span>
                     <span class="collapse-icon">▼</span>
                 </button>
                 <div class="collapsible-content" id="ai-detection-content">
@@ -159,7 +159,7 @@
             <!-- Spelling Errors -->
             <div class="spelling-errors-section glass-card fade-in" id="spelling-errors-section">
                 <button class="collapsible-header" id="spelling-toggle" aria-expanded="false">
-                    <span>📝 Правописни грешки</span>
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Правописни грешки</span>
                     <span class="collapse-icon">▼</span>
                 </button>
                 <div class="collapsible-content" id="spelling-content">
@@ -171,7 +171,7 @@
             <!-- Version History -->
             <div class="version-history-section fade-in" id="version-history-section">
                 <button class="collapsible-header" id="history-toggle" aria-expanded="false">
-                    <span>📜 История на оценките</span>
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg> История на оценките</span>
                     <span class="collapse-icon">▼</span>
                 </button>
                 <div class="collapsible-content" id="history-content">

@@ -200,6 +200,54 @@ async def api_delete_user(user_id: int, user=Depends(require_auth)):
     return {'success': True}
 
 
+@router.get('/manage/api/users/{user_id}')
+async def api_get_user(user_id: int, user=Depends(require_auth)):
+    """Get a single user by ID."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT id, email, role, created_at FROM users WHERE id = %s', (user_id,))
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(404, 'User not found')
+            result = dict(row)
+            from datetime import datetime
+            if isinstance(result.get('created_at'), datetime):
+                result['created_at'] = result['created_at'].isoformat()
+            return result
+    finally:
+        conn.close()
+
+
+@router.put('/manage/api/users/{user_id}')
+async def api_update_user(user_id: int, request: Request, user=Depends(require_auth)):
+    """Update user email, role, and optionally password."""
+    body = await request.json()
+    email = body.get('email', '').strip().lower()
+    role = body.get('role', 'admin')
+    password = body.get('password', '')
+
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if password:
+                from auth import hash_password
+                pw_hash = hash_password(password)
+                cur.execute(
+                    'UPDATE users SET email=%s, role=%s, password_hash=%s WHERE id=%s',
+                    (email, role, pw_hash, user_id)
+                )
+            else:
+                cur.execute(
+                    'UPDATE users SET email=%s, role=%s WHERE id=%s',
+                    (email, role, user_id)
+                )
+            conn.commit()
+    finally:
+        conn.close()
+    return {'success': True}
+
+
 # --- Stats ---
 
 @router.get('/manage/api/stats')
@@ -271,3 +319,13 @@ async def manage_group_detail(group_id: int):
 @router.get('/manage/users')
 async def manage_users():
     return FileResponse(os.path.join(MANAGE_DIR, 'users.html'))
+
+
+@router.get('/manage/users/add')
+async def manage_user_add():
+    return FileResponse(os.path.join(MANAGE_DIR, 'user-form.html'))
+
+
+@router.get('/manage/users/{user_id}/edit')
+async def manage_user_edit(user_id: int):
+    return FileResponse(os.path.join(MANAGE_DIR, 'user-form.html'))
