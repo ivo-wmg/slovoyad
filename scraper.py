@@ -70,6 +70,31 @@ def _clean_paragraph(tag) -> str:
     return text.strip()
 
 
+def _is_content_paragraph(p) -> bool:
+    """Return True if this <p> is real article content, not a widget link.
+
+    Filters out:
+    1. <p> nested inside an <a> tag (e.g. reference-article widgets)
+    2. <p> whose entire text is inside a single <a> child (e.g. leading-articles)
+    """
+    # Check 1: <p> inside an <a> ancestor
+    for parent in p.parents:
+        if parent.name == 'a':
+            return False
+        if parent.name in ('body', 'html', '[document]'):
+            break
+
+    # Check 2: <p> whose only meaningful content is a link
+    links = p.find_all('a')
+    if links:
+        link_text = ' '.join(a.get_text(strip=True) for a in links)
+        all_text = p.get_text(strip=True)
+        if all_text and len(link_text) / len(all_text) > 0.9:
+            return False
+
+    return True
+
+
 # Patterns for lines that are image captions or source credits
 _JUNK_LINE_PATTERNS = [
     re.compile(r'^Снимка\s*\d+', re.IGNORECASE),
@@ -125,7 +150,9 @@ def _strip_junk_blocks(container):
     for junk in container.select(
         'aside, nav, script, style, iframe, figure, '
         '.share, .social, .tags, .article-tags, '
-        '.newsletter, .promo, .ad, .comments'
+        '.newsletter, .promo, .ad, .comments, '
+        '.reference-article, .global-leading-articles-big, '
+        '.global-leading-articles, .related-articles, .related'
     ):
         junk.decompose()
 
@@ -196,7 +223,7 @@ def _extract_via_newspaper(url: str) -> dict:
             for tag in soup.find_all(['div', 'section', 'aside', 'figure', 'nav',
                                        'script', 'style', 'iframe']):
                 tag.decompose()
-            paragraphs = soup.find_all('p')
+            paragraphs = [p for p in soup.find_all('p') if _is_content_paragraph(p)]
             if paragraphs:
                 cleaned = "\n\n".join(_clean_paragraph(p) for p in paragraphs if _clean_paragraph(p))
                 if len(cleaned) >= _MIN_TEXT_LENGTH:
@@ -236,9 +263,9 @@ def _extract_via_bs4(html: str) -> dict:
         if container:
             _strip_junk_blocks(container)
 
-            paragraphs = container.find_all("p")
+            paragraphs = [p for p in container.find_all("p") if _is_content_paragraph(p)]
             if paragraphs:
-                text = "\n\n".join(_clean_paragraph(p) for p in paragraphs)
+                text = "\n\n".join(_clean_paragraph(p) for p in paragraphs if _clean_paragraph(p))
             else:
                 text = container.get_text(separator=" ", strip=True)
             if len(text) >= _MIN_TEXT_LENGTH:
@@ -246,9 +273,9 @@ def _extract_via_bs4(html: str) -> dict:
 
     # Last resort: grab all <p> tags from the page
     if len(text) < _MIN_TEXT_LENGTH:
-        all_paragraphs = soup.find_all("p")
+        all_paragraphs = [p for p in soup.find_all("p") if _is_content_paragraph(p)]
         if all_paragraphs:
-            text = "\n\n".join(_clean_paragraph(p) for p in all_paragraphs)
+            text = "\n\n".join(_clean_paragraph(p) for p in all_paragraphs if _clean_paragraph(p))
 
     return {
         "title": title,

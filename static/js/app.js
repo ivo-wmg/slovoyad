@@ -463,6 +463,11 @@
             const data = await response.json();
             renderResults(data);
 
+            // Update URL to root so user doesn't share a stale permalink
+            if (window.location.pathname !== '/') {
+                window.history.pushState(null, '', '/');
+            }
+
         } catch (err) {
             const friendlyMessages = {
                 'Failed to fetch': 'Няма връзка със сървъра. Моля, проверете дали сървърът работи.',
