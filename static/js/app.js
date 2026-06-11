@@ -449,11 +449,13 @@
         } finally {
             hideLoading();
         }
+    });
+
     // --- PDF Export ---
     exportPdfBtn.addEventListener('click', () => {
         const element = document.getElementById('results-section');
         const title = articleTitle.textContent || 'slovoyad-report';
-        const safeName = title.substring(0, 50).replace(/[^a-zA-Zа-яА-Я0-9\s]/g, '').trim().replace(/\s+/g, '_');
+        const safeName = title.substring(0, 50).replace(/[^a-zA-Z\u0430-\u044f\u0410-\u042f0-9\s]/g, '').trim().replace(/\s+/g, '_');
 
         // Temporarily expand collapsibles for PDF
         const justWasOpen = justificationsContent.classList.contains('open');
@@ -472,7 +474,6 @@
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
-            // Restore collapsible states
             if (!justWasOpen) {
                 justificationsContent.classList.remove('open');
                 justificationsToggle.setAttribute('aria-expanded', 'false');

@@ -356,8 +356,8 @@ body {
     transform: scale(0.96);
 }
 
-.pdf-icon {
-    font-size: 1rem;
+.export-pdf-btn svg {
+    flex-shrink: 0;
 }
 
 .meta-badges {
