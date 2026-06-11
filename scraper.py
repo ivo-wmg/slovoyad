@@ -178,7 +178,6 @@ def _extract_via_newspaper(url: str) -> dict:
         article.parse()
 
         title = (article.title or "").strip()
-        text = (article.text or "").strip()
         authors = list(article.authors) if article.authors else []
 
         publish_date: Optional[str] = None
@@ -188,9 +187,24 @@ def _extract_via_newspaper(url: str) -> dict:
             else:
                 publish_date = str(article.publish_date)
 
+        # Re-extract text from article HTML: strip divs, keep only <p> tags
+        raw_text = (article.text or "").strip()
+        article_html = getattr(article, 'article_html', '') or ''
+        if article_html:
+            soup = BeautifulSoup(article_html, "html.parser")
+            # Remove all div/section/aside/figure/nav elements
+            for tag in soup.find_all(['div', 'section', 'aside', 'figure', 'nav',
+                                       'script', 'style', 'iframe']):
+                tag.decompose()
+            paragraphs = soup.find_all('p')
+            if paragraphs:
+                cleaned = "\n\n".join(_clean_paragraph(p) for p in paragraphs if _clean_paragraph(p))
+                if len(cleaned) >= _MIN_TEXT_LENGTH:
+                    raw_text = cleaned
+
         return {
             "title": title,
-            "text": text,
+            "text": raw_text,
             "authors": authors,
             "publish_date": publish_date,
         }
