@@ -252,7 +252,7 @@ def get_evaluations_paginated(page: int = 1, per_page: int = 20,
         conn.close()
 
 
-def get_evaluation_by_id(eval_id: int) -> dict | None:
+def get_evaluation_by_id(eval_id: int) -> Optional[dict]:
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -274,7 +274,7 @@ def delete_evaluation(eval_id: int) -> bool:
         conn.close()
 
 
-def get_all_domains() -> list[str]:
+def get_all_domains() -> list:
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -337,7 +337,7 @@ def get_groups(page: int = 1, per_page: int = 20) -> dict:
         conn.close()
 
 
-def get_group_detail(group_id: int) -> dict | None:
+def get_group_detail(group_id: int) -> Optional[dict]:
     conn = get_connection()
     try:
         with conn.cursor() as cur:
@@ -384,7 +384,7 @@ def delete_group(group_id: int) -> bool:
         conn.close()
 
 
-def get_next_pending_url(group_id: int = None) -> dict | None:
+def get_next_pending_url(group_id: int = None) -> Optional[dict]:
     """Get next pending URL from queue."""
     conn = get_connection()
     try:

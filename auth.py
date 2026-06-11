@@ -51,7 +51,7 @@ def create_session(user_id: int) -> str:
     return token
 
 
-def get_session_user(token: str) -> dict | None:
+def get_session_user(token: str):
     """Return {id, email, role} for a valid session, or None."""
     conn = get_connection()
     try:
@@ -111,7 +111,7 @@ def create_user(email: str, password: str, role: str = "admin") -> int:
         conn.close()
 
 
-def get_all_users() -> list[dict]:
+def get_all_users() -> list:
     """Return all users (id, email, role, created_at)."""
     conn = get_connection()
     try:
