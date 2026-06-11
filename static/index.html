@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="СЛОВОЯД — Интелигентен анализатор на медийно съдържание. Оценявайте статии от българските медии по оригиналност, качество, доверие и значимост.">
+    <title>СЛОВОЯД — Анализатор на медийно съдържание</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner-container">
+            <div class="spinner"></div>
+            <p class="spinner-text">Анализиране на статията...</p>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-toast" class="error-toast hidden">
+        <div class="error-toast-content">
+            <span class="error-icon">⚠️</span>
+            <span id="error-message" class="error-message"></span>
+            <button id="error-close-btn" class="error-close" aria-label="Затвори">&times;</button>
+        </div>
+    </div>
+
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-glow"></div>
+            <h1 class="logo">СЛОВОЯД</h1>
+            <p class="subtitle">Анализатор на медийно съдържание</p>
+        </header>
+
+        <!-- Input Section -->
+        <section class="input-section" id="input-section">
+            <form id="evaluate-form" class="input-form" autocomplete="off">
+                <div class="input-wrapper">
+                    <input
+                        type="url"
+                        id="url-input"
+                        class="url-input"
+                        placeholder="Въведете URL на статия..."
+                        required
+                        aria-label="URL на статия"
+                    >
+                    <button type="submit" id="submit-btn" class="submit-btn">
+                        <span class="btn-text">Анализирай</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Supported Domains -->
+            <div class="domains-section">
+                <p class="domains-label">Поддържани домейни:</p>
+                <div class="domains-chips">
+                    <span class="domain-chip" data-domain="money.bg">money.bg</span>
+                    <span class="domain-chip" data-domain="dnevnik.bg">dnevnik.bg</span>
+                    <span class="domain-chip" data-domain="capital.bg">capital.bg</span>
+                    <span class="domain-chip" data-domain="mediapool.bg">mediapool.bg</span>
+                    <span class="domain-chip" data-domain="investor.bg">investor.bg</span>
+                    <span class="domain-chip" data-domain="bloomberg.bg">bloomberg.bg</span>
+                    <span class="domain-chip" data-domain="economy.bg">economy.bg</span>
+                    <span class="domain-chip" data-domain="forbes.bg">forbes.bg</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="results-section hidden">
+            <!-- Article Meta -->
+            <div class="article-meta glass-card fade-in">
+                <h2 id="article-title" class="article-title"></h2>
+                <div class="meta-badges">
+                    <span id="domain-badge" class="domain-badge"></span>
+                    <span id="version-badge" class="version-badge"></span>
+                    <span id="classification-badge" class="classification-badge"></span>
+                </div>
+            </div>
+
+            <!-- Score Cards -->
+            <div class="score-cards fade-in" id="score-cards">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <!-- Overall Score -->
+            <div class="overall-score-section glass-card fade-in">
+                <p class="overall-label">Обща оценка</p>
+                <div class="overall-score-ring" id="overall-score-ring">
+                    <svg viewBox="0 0 120 120" class="score-svg">
+                        <circle cx="60" cy="60" r="52" class="score-ring-bg"></circle>
+                        <circle cx="60" cy="60" r="52" class="score-ring-progress" id="score-ring-progress"></circle>
+                    </svg>
+                    <span class="overall-score-value" id="overall-score-value"></span>
+                </div>
+            </div>
+
+            <!-- Strengths & Weaknesses -->
+            <div class="sw-grid fade-in">
+                <div class="sw-card glass-card strengths-card">
+                    <h3 class="sw-title strengths-title">✅ Силни страни</h3>
+                    <ul id="strengths-list" class="sw-list"></ul>
+                </div>
+                <div class="sw-card glass-card weaknesses-card">
+                    <h3 class="sw-title weaknesses-title">❌ Слаби страни</h3>
+                    <ul id="weaknesses-list" class="sw-list"></ul>
+                </div>
+            </div>
+
+            <!-- Justifications -->
+            <div class="justifications-section glass-card fade-in">
+                <button class="collapsible-header" id="justifications-toggle" aria-expanded="false">
+                    <span>📋 Обосновки</span>
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="justifications-content">
+                    <div id="justifications-list" class="justifications-list"></div>
+                </div>
+            </div>
+
+            <!-- Version History -->
+            <div class="version-history-section fade-in" id="version-history-section">
+                <button class="collapsible-header" id="history-toggle" aria-expanded="false">
+                    <span>📜 История на оценките</span>
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <div class="collapsible-content" id="history-content">
+                    <div id="version-history-list" class="version-history-list"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
