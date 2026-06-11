@@ -59,7 +59,6 @@ class ScrapingError(Exception):
 import re
 
 _MULTI_SPACE = re.compile(r'[ \t]+')
-_MULTI_NEWLINE = re.compile(r'\n{3,}')
 
 
 def _clean_paragraph(tag) -> str:
@@ -69,6 +68,39 @@ def _clean_paragraph(tag) -> str:
     text = tag.get_text(separator=' ')
     text = _MULTI_SPACE.sub(' ', text)
     return text.strip()
+
+
+def _strip_junk_blocks(container):
+    """Remove non-content blocks from an article container.
+
+    Uses two strategies:
+    1. Known selectors (aside, nav, social, tags, etc.)
+    2. Link-density heuristic: any div/section where >50% of text
+       is inside <a> tags is likely a navigation/related widget.
+    """
+    # Strategy 1: known junk selectors
+    for junk in container.select(
+        'aside, nav, script, style, iframe, figure, '
+        '.share, .social, .tags, .article-tags, '
+        '.newsletter, .promo, .ad, .comments'
+    ):
+        junk.decompose()
+
+    # Strategy 2: link-density heuristic on remaining div/section blocks
+    for block in container.find_all(['div', 'section']):
+        total_text = block.get_text(separator=' ', strip=True)
+        if len(total_text) < 20:
+            continue  # too short to judge
+        link_text = ' '.join(
+            a.get_text(separator=' ', strip=True)
+            for a in block.find_all('a')
+        )
+        link_ratio = len(link_text) / len(total_text) if total_text else 0
+        # If >50% of text is links AND block has >1 link → widget
+        link_count = len(block.find_all('a'))
+        if link_ratio > 0.5 and link_count > 1:
+            block.decompose()
+
 
 
 def _fetch_html(url: str) -> str:
@@ -145,16 +177,7 @@ def _extract_via_bs4(html: str) -> dict:
     for selector in _ARTICLE_SELECTORS:
         container = soup.select_one(selector)
         if container:
-            # Remove related-articles, widgets, sidebars, nav blocks
-            for junk in container.select(
-                '.related, .related-articles, .related-posts, '
-                '.read-more, .see-also, .widget, .sidebar, '
-                '.article-tags, .tags, .share, .social, '
-                'aside, nav, .newsletter, .promo, .ad, '
-                '[class*="related"], [class*="widget"], '
-                '[class*="sidebar"], [class*="promo"]'
-            ):
-                junk.decompose()
+            _strip_junk_blocks(container)
 
             paragraphs = container.find_all("p")
             if paragraphs:
