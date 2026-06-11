@@ -228,14 +228,15 @@ async def api_pdf(url: str):
             evaluated_at=str(eval_dict.get("evaluated_at", "")),
         )
 
-        title = eval_dict.get("title_scraped", "report")[:40]
-        safe = title.replace(" ", "_").replace('"', '')
+        from datetime import datetime
+        domain = eval_dict.get("domain", "report")
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
 
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f'attachment; filename="slovoyad_{safe}.pdf"'
+                "Content-Disposition": f'attachment; filename="{domain}-{ts}.pdf"'
             },
         )
     except ImportError:
