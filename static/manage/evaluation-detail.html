@@ -98,6 +98,16 @@
             `;
         }
 
+        function copyPublicLink(evalId) {
+            const url = `${window.location.origin}/evaluations/${evalId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = event.target.closest('button');
+                const orig = btn.innerHTML;
+                btn.textContent = '✓ Копиран!';
+                setTimeout(() => { btn.innerHTML = orig; }, 2000);
+            });
+        }
+
         function renderDetail(ev) {
             const container = document.getElementById('detail-content');
             const classification = ev.classification || ev.article_type || '—';
@@ -116,6 +126,16 @@
                     <span class="domain-badge">${escapeHtml(ev.domain || '—')}</span>
                     <span class="version-badge">v${ev.version || 1}</span>
                     <span class="classification-badge">${escapeHtml(classification)}</span>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                    ${url ? `<a href="/api/pdf?url=${encodeURIComponent(url)}" target="_blank" class="admin-btn admin-btn-ghost admin-btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                        PDF
+                    </a>` : ''}
+                    <button onclick="copyPublicLink(${ev.id})" class="admin-btn admin-btn-ghost admin-btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Копирай линк
+                    </button>
                 </div>
             </div>`;
 
