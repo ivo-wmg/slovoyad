@@ -40,7 +40,31 @@
                     <option value="">Всички домейни</option>
                 </select>
                 <button class="admin-btn admin-btn-primary" onclick="doSearch()">🔍 Търсене</button>
+                <button class="admin-btn admin-btn-primary" onclick="openNewEvalModal()" style="margin-left: auto; background: linear-gradient(135deg, #22c55e, #16a34a);">➕ Нова оценка</button>
             </div>
+
+            <!-- New Evaluation Modal -->
+            <div id="new-eval-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center;">
+                <div style="background:#16161f; border:1px solid rgba(255,255,255,0.1); border-radius:16px; padding:2rem; width:90%; max-width:520px; position:relative;">
+                    <h3 style="margin:0 0 1.25rem 0; color:var(--text-primary,#f0f0f5); font-size:1.1rem;">➕ Нова оценка на статия</h3>
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-size:0.8rem; color:var(--text-muted,#6b7280); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:0.35rem;">URL на статията</label>
+                        <input type="url" id="eval-url-input" class="admin-input" placeholder="https://..." style="width:100%;">
+                    </div>
+                    <div id="eval-progress" style="display:none; margin-bottom:1rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <div class="spinner" style="width:20px;height:20px;border:2px solid rgba(99,102,241,0.3);border-top-color:#6366f1;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                            <span style="color:var(--text-secondary,#9ca3af); font-size:0.9rem;" id="eval-status-text">Оценяване...</span>
+                        </div>
+                    </div>
+                    <div id="eval-error" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:1rem;"></div>
+                    <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+                        <button class="admin-btn admin-btn-ghost" onclick="closeNewEvalModal()">Отказ</button>
+                        <button class="admin-btn admin-btn-primary" id="eval-submit-btn" onclick="submitNewEval()">🚀 Оцени</button>
+                    </div>
+                </div>
+            </div>
+            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 
             <div class="admin-table-wrap">
                 <table class="admin-table">
@@ -168,7 +192,66 @@
             loadDomains();
             loadEvaluations();
             document.getElementById('search-input').addEventListener('keyup', (e) => { if (e.key === 'Enter') doSearch(); });
+            document.getElementById('eval-url-input').addEventListener('keyup', (e) => { if (e.key === 'Enter') submitNewEval(); });
         });
+
+        function openNewEvalModal() {
+            const modal = document.getElementById('new-eval-modal');
+            modal.style.display = 'flex';
+            document.getElementById('eval-url-input').value = '';
+            document.getElementById('eval-error').style.display = 'none';
+            document.getElementById('eval-progress').style.display = 'none';
+            document.getElementById('eval-submit-btn').disabled = false;
+            setTimeout(() => document.getElementById('eval-url-input').focus(), 100);
+        }
+
+        function closeNewEvalModal() {
+            document.getElementById('new-eval-modal').style.display = 'none';
+        }
+
+        async function submitNewEval() {
+            const url = document.getElementById('eval-url-input').value.trim();
+            const errEl = document.getElementById('eval-error');
+            const progressEl = document.getElementById('eval-progress');
+            const submitBtn = document.getElementById('eval-submit-btn');
+            errEl.style.display = 'none';
+
+            if (!url || !url.startsWith('http')) {
+                errEl.textContent = 'Въведете валиден URL (https://...)';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            progressEl.style.display = 'block';
+            document.getElementById('eval-status-text').textContent = 'Скрейпване и оценяване... (до 30 сек.)';
+
+            try {
+                const resp = await fetch('/api/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Грешка при оценяване');
+                }
+                const data = await resp.json();
+                closeNewEvalModal();
+                showToast('Оценката е готова!', 'success');
+                // Navigate to the new evaluation
+                if (data.current && data.current.id) {
+                    window.location.href = '/manage/evaluations/' + data.current.id;
+                } else {
+                    loadEvaluations();
+                }
+            } catch(e) {
+                errEl.textContent = e.message;
+                errEl.style.display = 'block';
+                progressEl.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>
