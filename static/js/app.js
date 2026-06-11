@@ -561,19 +561,23 @@
             const item = document.createElement('div');
             item.className = 'spelling-error-item';
 
-            const word = err.word || err.original || '';
-            const suggestion = err.suggestion || err.correct || '';
-            const context = err.context || '';
+            if (typeof err === 'string') {
+                item.innerHTML = `<span class="spelling-error-word">${escapeHtml(err)}</span>`;
+            } else {
+                const word = err.word || err.original || '';
+                const suggestion = err.suggestion || err.correct || '';
+                const context = err.context || '';
 
-            let html = `<span class="spelling-error-word">${escapeHtml(word)}</span>`;
-            if (suggestion) {
-                html += ` <span class="spelling-error-suggestion">→ ${escapeHtml(suggestion)}</span>`;
-            }
-            if (context) {
-                html += `<span class="spelling-error-context"> — ${escapeHtml(context)}</span>`;
+                let html = `<span class="spelling-error-word">${escapeHtml(word)}</span>`;
+                if (suggestion) {
+                    html += ` <span class="spelling-error-suggestion">→ ${escapeHtml(suggestion)}</span>`;
+                }
+                if (context) {
+                    html += `<span class="spelling-error-context"> — ${escapeHtml(context)}</span>`;
+                }
+                item.innerHTML = html;
             }
 
-            item.innerHTML = html;
             spellingErrorsList.appendChild(item);
         });
     }
