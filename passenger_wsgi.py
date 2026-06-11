@@ -36,7 +36,14 @@ class WSGIApp:
                 headers.append((b'content-length', value.encode()))
 
         body = environ.get('wsgi.input', io.BytesIO())
-        body_bytes = body.read()
+        try:
+            content_length = int(environ.get('CONTENT_LENGTH', 0) or 0)
+        except (ValueError, TypeError):
+            content_length = 0
+        try:
+            body_bytes = body.read(content_length) if content_length > 0 else b''
+        except Exception:
+            body_bytes = b''
 
         scope = {
             'type': 'http',
