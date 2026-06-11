@@ -486,6 +486,47 @@ body {
     color: var(--text-primary);
 }
 
+/* Global admin input styling (for standalone inputs outside .admin-form) */
+.admin-input,
+.admin-content input:not([type="checkbox"]):not([type="radio"]),
+.admin-content select,
+.admin-content textarea {
+    background: var(--bg-secondary, #12121a);
+    border: 1px solid var(--border-subtle, rgba(255,255,255,0.08));
+    border-radius: var(--radius-sm, 8px);
+    color: var(--text-primary, #f0f0f5);
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    font-family: var(--font, 'Inter', sans-serif);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.admin-input::placeholder,
+.admin-content input::placeholder,
+.admin-content textarea::placeholder {
+    color: var(--text-muted, #6b7280);
+}
+
+.admin-input:focus,
+.admin-content input:not([type="checkbox"]):not([type="radio"]):focus,
+.admin-content select:focus,
+.admin-content textarea:focus {
+    border-color: var(--border-glow, rgba(99,102,241,0.5));
+    box-shadow: 0 0 0 3px var(--accent-glow, rgba(99,102,241,0.15));
+}
+
+.admin-content select option {
+    background: var(--bg-secondary, #12121a);
+    color: var(--text-primary, #f0f0f5);
+}
+
+.admin-content textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
 /* ============================================
    BADGES
    ============================================ */
