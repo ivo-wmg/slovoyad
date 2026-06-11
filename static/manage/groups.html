@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Групи — СЛОВОЯД Админ</title>
+    <meta name="description" content="Управление на групи за bulk check оценки в СЛОВОЯД админ панел.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+    <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <h1 class="admin-logo">СЛОВОЯД</h1>
+            <span class="admin-logo-sub">Админ панел</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/manage">📊 Табло</a>
+            <a href="/manage/evaluations">📋 Оценки</a>
+            <a href="/manage/groups" class="active">📁 Групи</a>
+            <a href="/manage/users">👥 Потребители</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <a href="/" class="admin-nav-link">← Към сайта</a>
+            <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+        </div>
+    </aside>
+    <main class="admin-content">
+
+        <div class="admin-content-header">
+            <h2>Групи</h2>
+            <button class="admin-btn admin-btn-primary" onclick="toggleNewGroup()">+ Нов Bulk Check</button>
+        </div>
+
+        <div class="admin-card" id="new-group-form" style="display: none;">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="text" id="group-name" class="admin-input" placeholder="Име на групата">
+                <textarea id="group-urls" class="admin-input" placeholder="Въведете URL адреси, по един на ред..." rows="6"></textarea>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="admin-btn admin-btn-primary" onclick="submitGroup()">Стартирай</button>
+                    <button class="admin-btn admin-btn-ghost" onclick="toggleNewGroup()">Отказ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Име</th>
+                        <th>Статус</th>
+                        <th>Прогрес</th>
+                        <th>Грешки</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="groups-body"></tbody>
+            </table>
+        </div>
+
+    </main>
+</div>
+
+<script src="/static/manage/js/admin.js"></script>
+<script>
+function toggleNewGroup() {
+    const form = document.getElementById('new-group-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitGroup() {
+    const name = document.getElementById('group-name').value.trim();
+    const urlsText = document.getElementById('group-urls').value.trim();
+    if (!name || !urlsText) { showToast('Моля, попълнете всички полета'); return; }
+
+    const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u);
+    if (urls.length === 0) { showToast('Моля, въведете поне един URL'); return; }
+
+    try {
+        await apiFetch('/groups', {
+            method: 'POST',
+            body: JSON.stringify({ name, urls })
+        });
+        showToast('Групата е създадена успешно', 'success');
+        document.getElementById('group-name').value = '';
+        document.getElementById('group-urls').value = '';
+        toggleNewGroup();
+        loadGroups();
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+async function loadGroups() {
+    try {
+        const data = await apiFetch('/groups');
+        const items = data.items || data || [];
+        const tbody = document.getElementById('groups-body');
+        tbody.innerHTML = items.map(g => {
+            const total = g.total_urls || 0;
+            const completed = g.completed_urls || 0;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            return `
+                <tr>
+                    <td style="color: var(--text-muted);">${g.id}</td>
+                    <td><a href="/manage/group-detail?id=${g.id}" style="color: var(--text-primary); text-decoration: none;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--text-primary)'">${escapeHtml(g.name)}</a></td>
+                    <td>${statusBadge(g.status)}</td>
+                    <td>
+                        <span style="font-size: 0.85rem;">${completed}/${total}</span>
+                        <div class="admin-progress" style="margin-top: 0.35rem;">
+                            <div class="admin-progress-fill" style="width: ${pct}%;"></div>
+                        </div>
+                    </td>
+                    <td style="color: ${g.error_count > 0 ? 'var(--red)' : 'var(--text-muted)'};">${g.error_count || 0}</td>
+                    <td style="color: var(--text-muted);">${formatDate(g.created_at)}</td>
+                    <td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="deleteGroup(${g.id})">🗑️</button></td>
+                </tr>
+            `;
+        }).join('');
+    } catch(e) {
+        showToast('Грешка при зареждане: ' + e.message);
+    }
+}
+
+async function deleteGroup(id) {
+    if (!await confirmModal('Изтриване на група', `Сигурни ли сте, че искате да изтриете група #${id}?`)) return;
+    try {
+        await apiFetch(`/groups/${id}`, { method: 'DELETE' });
+        showToast('Групата е изтрита', 'success');
+        loadGroups();
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadGroups);
+</script>
+
+</body>
+</html>

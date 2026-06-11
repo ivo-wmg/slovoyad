@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детайли на група — СЛОВОЯД Админ</title>
+    <meta name="description" content="Преглед на детайли и прогрес на група за bulk check оценки.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+    <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <h1 class="admin-logo">СЛОВОЯД</h1>
+            <span class="admin-logo-sub">Админ панел</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/manage">📊 Табло</a>
+            <a href="/manage/evaluations">📋 Оценки</a>
+            <a href="/manage/groups" class="active">📁 Групи</a>
+            <a href="/manage/users">👥 Потребители</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <a href="/" class="admin-nav-link">← Към сайта</a>
+            <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+        </div>
+    </aside>
+    <main class="admin-content">
+
+        <div class="admin-content-header">
+            <a href="/manage/groups" class="admin-btn admin-btn-ghost">← Назад</a>
+            <h2 id="group-title">Детайли на група</h2>
+        </div>
+
+        <div class="admin-card" id="group-info">
+            <!-- populated by JS -->
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>URL</th>
+                        <th>Статус</th>
+                        <th>Заглавие</th>
+                        <th>Оценка</th>
+                        <th>Грешка</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="urls-body"></tbody>
+            </table>
+        </div>
+
+    </main>
+</div>
+
+<script src="/static/manage/js/admin.js"></script>
+<script>
+let refreshInterval = null;
+
+async function loadGroup() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id) { window.location.href = '/manage/groups'; return; }
+
+    try {
+        const group = await apiFetch(`/groups/${id}`);
+        document.getElementById('group-title').textContent = group.name || `Група #${id}`;
+
+        const total = group.total_urls || 0;
+        const completed = group.completed_urls || 0;
+        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        document.getElementById('group-info').innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <span style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">${escapeHtml(group.name)}</span>
+                ${statusBadge(group.status)}
+            </div>
+            <div class="admin-progress" style="margin-bottom: 1rem; height: 8px;">
+                <div class="admin-progress-fill" style="width: ${pct}%;"></div>
+            </div>
+            <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.88rem; color: var(--text-secondary);">
+                <span>📊 Прогрес: <strong style="color: var(--text-primary);">${completed}/${total}</strong> (${pct}%)</span>
+                <span>❌ Грешки: <strong style="color: ${group.error_count > 0 ? 'var(--red)' : 'var(--text-primary)'};">${group.error_count || 0}</strong></span>
+                <span>📅 Създадена: <strong style="color: var(--text-primary);">${formatDate(group.created_at)}</strong></span>
+                ${group.created_by ? `<span>👤 От: <strong style="color: var(--text-primary);">${escapeHtml(group.created_by)}</strong></span>` : ''}
+            </div>
+        `;
+
+        // URLs table
+        const urls = group.urls || [];
+        const tbody = document.getElementById('urls-body');
+        tbody.innerHTML = urls.map(u => `
+            <tr>
+                <td><a href="${escapeHtml(u.url)}" target="_blank" rel="noopener" style="color: var(--accent-secondary); text-decoration: none; font-size: 0.85rem;" title="${escapeHtml(u.url)}">${escapeHtml((u.url || '').substring(0, 60))}${(u.url || '').length > 60 ? '...' : ''}</a></td>
+                <td>${statusBadge(u.status)}</td>
+                <td style="color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(u.title || '—')}</td>
+                <td>${u.score != null ? `<span style="color: ${scoreColor(u.score)}; font-weight: 700;">${u.score.toFixed(1)}</span>` : '—'}</td>
+                <td style="color: var(--red); font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(u.error || '')}">${u.error ? escapeHtml(u.error) : ''}</td>
+                <td>${u.evaluation_id ? `<a href="/manage/evaluation-detail?id=${u.evaluation_id}" class="admin-btn admin-btn-ghost admin-btn-sm">Виж →</a>` : ''}</td>
+            </tr>
+        `).join('');
+
+        // Auto-refresh logic
+        if (group.status === 'running' || group.status === 'processing') {
+            if (!refreshInterval) {
+                refreshInterval = setInterval(loadGroup, 5000);
+            }
+        } else {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadGroup);
+</script>
+
+</body>
+</html>

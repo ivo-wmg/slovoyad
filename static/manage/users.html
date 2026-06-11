@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Потребители — СЛОВОЯД Админ</title>
+    <meta name="description" content="Управление на потребители в СЛОВОЯД админ панел.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body>
+
+<div class="admin-layout">
+    <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <h1 class="admin-logo">СЛОВОЯД</h1>
+            <span class="admin-logo-sub">Админ панел</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="/manage">📊 Табло</a>
+            <a href="/manage/evaluations">📋 Оценки</a>
+            <a href="/manage/groups">📁 Групи</a>
+            <a href="/manage/users" class="active">👥 Потребители</a>
+        </nav>
+        <div class="admin-sidebar-footer">
+            <a href="/" class="admin-nav-link">← Към сайта</a>
+            <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+        </div>
+    </aside>
+    <main class="admin-content">
+
+        <div class="admin-content-header">
+            <h2>Потребители</h2>
+        </div>
+
+        <div class="admin-card">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: var(--text-primary);">Добави потребител</h3>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end;">
+                <input type="email" id="new-email" class="admin-input" placeholder="Имейл" style="flex: 1; min-width: 200px;">
+                <input type="password" id="new-password" class="admin-input" placeholder="Парола" style="flex: 1; min-width: 160px;">
+                <select id="new-role" class="admin-input" style="min-width: 140px;">
+                    <option value="user">Потребител</option>
+                    <option value="admin">Админ</option>
+                </select>
+                <button class="admin-btn admin-btn-primary" onclick="addUser()">Добави</button>
+            </div>
+        </div>
+
+        <div class="admin-table-wrap">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имейл</th>
+                        <th>Роля</th>
+                        <th>Дата на създаване</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="users-body"></tbody>
+            </table>
+        </div>
+
+    </main>
+</div>
+
+<script src="/static/manage/js/admin.js"></script>
+<script>
+let currentUserEmail = '';
+
+async function loadCurrentUser() {
+    try {
+        const me = await apiFetch('/me');
+        currentUserEmail = me.email || '';
+    } catch(e) {}
+}
+
+async function loadUsers() {
+    try {
+        const data = await apiFetch('/users');
+        const users = data.items || data || [];
+        const tbody = document.getElementById('users-body');
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td style="color: var(--text-muted);">${u.id}</td>
+                <td style="color: var(--text-primary);">${escapeHtml(u.email)}</td>
+                <td><span class="admin-badge ${u.role === 'admin' ? 'admin-badge-blue' : 'admin-badge-green'}">${u.role === 'admin' ? 'Админ' : 'Потребител'}</span></td>
+                <td style="color: var(--text-muted);">${formatDate(u.created_at)}</td>
+                <td>${u.email !== currentUserEmail ? `<button class="admin-btn admin-btn-danger admin-btn-sm" onclick="deleteUser(${u.id}, '${escapeHtml(u.email)}')">🗑️</button>` : '<span style="color: var(--text-muted); font-size: 0.8rem;">Вие</span>'}</td>
+            </tr>
+        `).join('');
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+async function addUser() {
+    const email = document.getElementById('new-email').value.trim();
+    const password = document.getElementById('new-password').value;
+    const role = document.getElementById('new-role').value;
+
+    if (!email || !password) { showToast('Моля, попълнете имейл и парола'); return; }
+
+    try {
+        await apiFetch('/users', {
+            method: 'POST',
+            body: JSON.stringify({ email, password, role })
+        });
+        showToast('Потребителят е добавен', 'success');
+        document.getElementById('new-email').value = '';
+        document.getElementById('new-password').value = '';
+        loadUsers();
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+async function deleteUser(id, email) {
+    if (!await confirmModal('Изтриване на потребител', `Сигурни ли сте, че искате да изтриете ${email}?`)) return;
+    try {
+        await apiFetch(`/users/${id}`, { method: 'DELETE' });
+        showToast('Потребителят е изтрит', 'success');
+        loadUsers();
+    } catch(e) {
+        showToast('Грешка: ' + e.message);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentUser();
+    loadUsers();
+});
+</script>
+
+</body>
+</html>

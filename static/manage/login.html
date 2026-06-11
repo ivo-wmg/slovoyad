@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СЛОВОЯД — Вход в админ панел</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body class="login-page">
+    <div class="login-card admin-card">
+        <div class="login-header">
+            <h1 class="logo-text">СЛОВОЯД</h1>
+            <p class="logo-subtitle">Админ панел</p>
+        </div>
+        <div id="login-error" class="login-error" style="display:none;"></div>
+        <form id="login-form" class="admin-form">
+            <div class="form-group">
+                <label for="email">Имейл</label>
+                <input type="email" id="email" name="email" placeholder="admin@example.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label for="password">Парола</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="admin-btn admin-btn-primary" style="width:100%; margin-top: 0.5rem; padding: 0.75rem;">Вход</button>
+        </form>
+    </div>
+    <script src="/static/manage/js/admin.js"></script>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.style.display = 'none';
+            
+            try {
+                const resp = await fetch('/manage/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Грешен имейл или парола');
+                }
+                window.location.href = '/manage';
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

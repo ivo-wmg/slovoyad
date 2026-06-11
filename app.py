@@ -30,6 +30,10 @@ app = FastAPI(title="Slovoyad", version="0.1.0")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# --- Admin panel ---
+from admin import router as admin_router
+app.include_router(admin_router)
+
 # --- Static files ---
 
 static_dir = os.path.join(BASE_DIR, "static")

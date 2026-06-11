@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СЛОВОЯД — Табло</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <h1 class="admin-logo">СЛОВОЯД</h1>
+                <span class="admin-logo-sub">Админ панел</span>
+            </div>
+            <nav class="admin-nav">
+                <a href="/manage" class="active">📊 Табло</a>
+                <a href="/manage/evaluations">📋 Оценки</a>
+                <a href="/manage/groups">📁 Групи</a>
+                <a href="/manage/users">👥 Потребители</a>
+            </nav>
+            <div class="admin-sidebar-footer">
+                <a href="/" class="admin-nav-link">← Към сайта</a>
+                <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+            </div>
+        </aside>
+        <main class="admin-content">
+            <div class="admin-content-header">
+                <h2>Табло</h2>
+            </div>
+
+            <div class="admin-stats">
+                <div class="admin-stat-card admin-card">
+                    <div class="admin-stat-icon">📋</div>
+                    <div class="admin-stat-value" id="stat-evaluations">—</div>
+                    <div class="admin-stat-label">Общо оценки</div>
+                </div>
+                <div class="admin-stat-card admin-card">
+                    <div class="admin-stat-icon">📁</div>
+                    <div class="admin-stat-value" id="stat-groups">—</div>
+                    <div class="admin-stat-label">Общо групи</div>
+                </div>
+                <div class="admin-stat-card admin-card">
+                    <div class="admin-stat-icon">⚡</div>
+                    <div class="admin-stat-value" id="stat-active">—</div>
+                    <div class="admin-stat-label">Активни проверки</div>
+                </div>
+                <div class="admin-stat-card admin-card">
+                    <div class="admin-stat-icon">👥</div>
+                    <div class="admin-stat-value" id="stat-users">—</div>
+                    <div class="admin-stat-label">Потребители</div>
+                </div>
+            </div>
+
+            <div class="admin-grid-2">
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Последни оценки</h3>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Заглавие</th>
+                                    <th>Оценка</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-evaluations">
+                                <tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Зареждане...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="admin-card-footer">
+                        <a href="/manage/evaluations" class="admin-link">Виж всички →</a>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="admin-card-header">
+                        <h3>Последни групи</h3>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Име</th>
+                                    <th>Статус</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-groups">
+                                <tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Зареждане...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="admin-card-footer">
+                        <a href="/manage/groups" class="admin-link">Виж всички →</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="/static/manage/js/admin.js"></script>
+    <script>
+        async function loadDashboard() {
+            try {
+                const stats = await apiFetch('/stats');
+                document.getElementById('stat-evaluations').textContent = stats.total_evaluations || 0;
+                document.getElementById('stat-groups').textContent = stats.total_groups || 0;
+                document.getElementById('stat-active').textContent = stats.active_checks || 0;
+                document.getElementById('stat-users').textContent = stats.total_users || 0;
+            } catch(e) { console.error(e); }
+
+            try {
+                const data = await apiFetch('/evaluations?limit=5');
+                const items = data.items || [];
+                const tbody = document.getElementById('recent-evaluations');
+                tbody.innerHTML = items.map(ev => `
+                    <tr>
+                        <td><a href="/manage/evaluation-detail?id=${ev.id}" style="color: var(--text-primary); text-decoration: none;">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 50))}${(ev.title_scraped || '').length > 50 ? '...' : ''}</a></td>
+                        <td><span style="color: ${scoreColor(ev.final_overall_score)}; font-weight: 700;">${ev.final_overall_score?.toFixed(1) || '—'}</span></td>
+                        <td style="color: var(--text-muted);">${formatDate(ev.evaluated_at)}</td>
+                    </tr>
+                `).join('');
+            } catch(e) { console.error(e); }
+
+            try {
+                const data = await apiFetch('/groups?limit=5');
+                const items = data.items || [];
+                const tbody = document.getElementById('recent-groups');
+                tbody.innerHTML = items.map(g => `
+                    <tr>
+                        <td><a href="/manage/group-detail?id=${g.id}" style="color: var(--text-primary); text-decoration: none;">${escapeHtml(g.name)}</a></td>
+                        <td>${statusBadge(g.status)}</td>
+                        <td style="color: var(--text-muted);">${formatDate(g.created_at)}</td>
+                    </tr>
+                `).join('');
+            } catch(e) { console.error(e); }
+        }
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+</html>

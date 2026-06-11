@@ -206,3 +206,259 @@ def get_version_count(url: str) -> int:
             return cur.fetchone()["cnt"]
     finally:
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Paginated evaluations & single-record ops
+# ---------------------------------------------------------------------------
+
+def get_evaluations_paginated(page: int = 1, per_page: int = 20,
+                               search: str = None, domain: str = None) -> dict:
+    """Get paginated evaluations with optional search and domain filter.
+    Returns {items: list, total: int, page: int, per_page: int, total_pages: int}
+    """
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            where_clauses = []
+            params = []
+            if search:
+                where_clauses.append('(title_scraped LIKE %s OR url LIKE %s)')
+                params.extend([f'%{search}%', f'%{search}%'])
+            if domain:
+                where_clauses.append('domain = %s')
+                params.append(domain)
+
+            where = 'WHERE ' + ' AND '.join(where_clauses) if where_clauses else ''
+
+            cur.execute(f'SELECT COUNT(*) as cnt FROM evaluations {where}', params)
+            total = cur.fetchone()['cnt']
+
+            offset = (page - 1) * per_page
+            cur.execute(
+                f'SELECT * FROM evaluations {where} ORDER BY evaluated_at DESC LIMIT %s OFFSET %s',
+                params + [per_page, offset]
+            )
+            items = [_row_to_dict(row) for row in cur.fetchall()]
+
+            return {
+                'items': items,
+                'total': total,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': (total + per_page - 1) // per_page
+            }
+    finally:
+        conn.close()
+
+
+def get_evaluation_by_id(eval_id: int) -> dict | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT * FROM evaluations WHERE id = %s', (eval_id,))
+            row = cur.fetchone()
+            return _row_to_dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def delete_evaluation(eval_id: int) -> bool:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('DELETE FROM evaluations WHERE id = %s', (eval_id,))
+            conn.commit()
+            return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def get_all_domains() -> list[str]:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT DISTINCT domain FROM evaluations ORDER BY domain')
+            return [row['domain'] for row in cur.fetchall()]
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Group operations
+# ---------------------------------------------------------------------------
+
+def create_group(name: str, urls: list[str], created_by: int = None) -> int:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            conn.begin()
+            cur.execute(
+                'INSERT INTO evaluation_groups (name, created_by, total_urls, status) VALUES (%s, %s, %s, %s)',
+                (name, created_by, len(urls), 'pending')
+            )
+            group_id = cur.lastrowid
+            for url in urls:
+                cur.execute(
+                    'INSERT INTO group_urls (group_id, url) VALUES (%s, %s)',
+                    (group_id, url.strip())
+                )
+            conn.commit()
+        return group_id
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def get_groups(page: int = 1, per_page: int = 20) -> dict:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT COUNT(*) as cnt FROM evaluation_groups')
+            total = cur.fetchone()['cnt']
+            offset = (page - 1) * per_page
+            cur.execute(
+                'SELECT g.*, u.email as created_by_email '
+                'FROM evaluation_groups g '
+                'LEFT JOIN users u ON g.created_by = u.id '
+                'ORDER BY g.created_at DESC LIMIT %s OFFSET %s',
+                (per_page, offset)
+            )
+            items = []
+            for row in cur.fetchall():
+                r = dict(row)
+                if isinstance(r.get('created_at'), datetime):
+                    r['created_at'] = r['created_at'].isoformat()
+                items.append(r)
+            return {'items': items, 'total': total, 'page': page, 'per_page': per_page}
+    finally:
+        conn.close()
+
+
+def get_group_detail(group_id: int) -> dict | None:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT g.*, u.email as created_by_email '
+                'FROM evaluation_groups g '
+                'LEFT JOIN users u ON g.created_by = u.id '
+                'WHERE g.id = %s', (group_id,)
+            )
+            group = cur.fetchone()
+            if not group:
+                return None
+            group = dict(group)
+            if isinstance(group.get('created_at'), datetime):
+                group['created_at'] = group['created_at'].isoformat()
+
+            cur.execute(
+                'SELECT gu.*, e.title_scraped, e.final_overall_score '
+                'FROM group_urls gu '
+                'LEFT JOIN evaluations e ON gu.evaluation_id = e.id '
+                'WHERE gu.group_id = %s ORDER BY gu.id',
+                (group_id,)
+            )
+            urls = []
+            for row in cur.fetchall():
+                r = dict(row)
+                if isinstance(r.get('created_at'), datetime):
+                    r['created_at'] = r['created_at'].isoformat()
+                urls.append(r)
+            group['urls'] = urls
+            return group
+    finally:
+        conn.close()
+
+
+def delete_group(group_id: int) -> bool:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('DELETE FROM evaluation_groups WHERE id = %s', (group_id,))
+            conn.commit()
+            return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def get_next_pending_url(group_id: int = None) -> dict | None:
+    """Get next pending URL from queue."""
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if group_id:
+                cur.execute(
+                    'SELECT * FROM group_urls WHERE group_id = %s AND status = %s ORDER BY id LIMIT 1',
+                    (group_id, 'pending')
+                )
+            else:
+                cur.execute(
+                    'SELECT * FROM group_urls WHERE status = %s ORDER BY id LIMIT 1',
+                    ('pending',)
+                )
+            row = cur.fetchone()
+            return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def update_group_url_status(url_id: int, status: str, evaluation_id: int = None, error_message: str = None):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            if evaluation_id:
+                cur.execute(
+                    'UPDATE group_urls SET status=%s, evaluation_id=%s WHERE id=%s',
+                    (status, evaluation_id, url_id)
+                )
+            elif error_message:
+                cur.execute(
+                    'UPDATE group_urls SET status=%s, error_message=%s, retries=retries+1 WHERE id=%s',
+                    (status, error_message, url_id)
+                )
+            else:
+                cur.execute('UPDATE group_urls SET status=%s WHERE id=%s', (status, url_id))
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def update_group_counters(group_id: int):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                'UPDATE evaluation_groups SET '
+                'completed_urls = (SELECT COUNT(*) FROM group_urls WHERE group_id=%s AND status="completed"), '
+                'failed_urls = (SELECT COUNT(*) FROM group_urls WHERE group_id=%s AND status="failed") '
+                'WHERE id = %s',
+                (group_id, group_id, group_id)
+            )
+            # Check if all done
+            cur.execute(
+                'SELECT COUNT(*) as pending FROM group_urls WHERE group_id=%s AND status IN ("pending","processing")',
+                (group_id,)
+            )
+            pending = cur.fetchone()['pending']
+            if pending == 0:
+                cur.execute(
+                    'UPDATE evaluation_groups SET status="completed" WHERE id=%s',
+                    (group_id,)
+                )
+            conn.commit()
+    finally:
+        conn.close()
+
+
+def get_group_url_retry_count(url_id: int) -> int:
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute('SELECT retries FROM group_urls WHERE id=%s', (url_id,))
+            row = cur.fetchone()
+            return row['retries'] if row else 0
+    finally:
+        conn.close()

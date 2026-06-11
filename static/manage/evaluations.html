@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оценки — СЛОВОЯД Админ</title>
+    <meta name="description" content="Управление на оценки в админ панела на СЛОВОЯД">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/manage/css/admin.css">
+</head>
+<body>
+    <div class="admin-layout">
+        <button class="admin-mobile-toggle" aria-label="Меню">☰</button>
+        <aside class="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <h1 class="admin-logo">СЛОВОЯД</h1>
+                <span class="admin-logo-sub">Админ панел</span>
+            </div>
+            <nav class="admin-nav">
+                <a href="/manage">📊 Табло</a>
+                <a href="/manage/evaluations" class="active">📋 Оценки</a>
+                <a href="/manage/groups">📁 Групи</a>
+                <a href="/manage/users">👥 Потребители</a>
+            </nav>
+            <div class="admin-sidebar-footer">
+                <a href="/" class="admin-nav-link">← Към сайта</a>
+                <a href="#" id="logout-btn" class="admin-nav-link">🚪 Изход</a>
+            </div>
+        </aside>
+        <main class="admin-content">
+            <div class="admin-content-header">
+                <h2>Оценки</h2>
+            </div>
+
+            <div class="admin-search">
+                <input type="text" id="search-input" placeholder="Търсене по заглавие или URL...">
+                <select id="domain-filter">
+                    <option value="">Всички домейни</option>
+                </select>
+                <button class="admin-btn admin-btn-primary" onclick="doSearch()">🔍 Търсене</button>
+            </div>
+
+            <div class="admin-table-wrap">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Заглавие</th>
+                            <th>Домейн</th>
+                            <th>Оценка</th>
+                            <th>Версия</th>
+                            <th>Дата</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="evaluations-body"></tbody>
+                </table>
+            </div>
+
+            <div class="admin-pagination" id="pagination"></div>
+        </main>
+    </div>
+
+    <script src="/static/manage/js/admin.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchQuery = '';
+        let domainFilter = '';
+
+        async function loadDomains() {
+            try {
+                const domains = await apiFetch('/domains');
+                const select = document.getElementById('domain-filter');
+                (domains || []).forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.textContent = d;
+                    select.appendChild(opt);
+                });
+            } catch(e) {}
+        }
+
+        async function loadEvaluations() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: 20,
+                    ...(searchQuery && { search: searchQuery }),
+                    ...(domainFilter && { domain: domainFilter })
+                });
+                const data = await apiFetch('/evaluations?' + params);
+                const items = data.items || [];
+                totalPages = data.total_pages || 1;
+
+                const tbody = document.getElementById('evaluations-body');
+                tbody.innerHTML = items.map(ev => `
+                    <tr>
+                        <td style="color: var(--text-muted);">${ev.id}</td>
+                        <td><a href="/manage/evaluation-detail?id=${ev.id}" style="color: var(--text-primary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--text-primary)'">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 60))}${(ev.title_scraped || '').length > 60 ? '...' : ''}</a></td>
+                        <td><span class="admin-badge admin-badge-blue">${escapeHtml(ev.domain || '—')}</span></td>
+                        <td><span style="color: ${scoreColor(ev.final_overall_score)}; font-weight: 700;">${ev.final_overall_score?.toFixed(1) || '—'}</span></td>
+                        <td style="color: var(--text-muted);">v${ev.version || 1}</td>
+                        <td style="color: var(--text-muted);">${formatDate(ev.evaluated_at)}</td>
+                        <td><button class="admin-btn admin-btn-danger admin-btn-sm" onclick="deleteEvaluation(${ev.id})">🗑️</button></td>
+                    </tr>
+                `).join('');
+
+                renderPagination();
+            } catch(e) {
+                showToast('Грешка при зареждане: ' + e.message);
+            }
+        }
+
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            let html = '';
+            html += `<button class="admin-btn admin-btn-ghost" ${currentPage <= 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">← Предишна</button>`;
+
+            const maxVisible = 5;
+            let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let end = Math.min(totalPages, start + maxVisible - 1);
+            if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+
+            if (start > 1) html += `<button class="admin-btn admin-btn-ghost" onclick="changePage(1)">1</button>`;
+            if (start > 2) html += `<span style="color: var(--text-muted); padding: 0.5rem;">...</span>`;
+
+            for (let i = start; i <= end; i++) {
+                html += `<button class="admin-btn ${i === currentPage ? 'admin-btn-primary' : 'admin-btn-ghost'}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (end < totalPages - 1) html += `<span style="color: var(--text-muted); padding: 0.5rem;">...</span>`;
+            if (end < totalPages) html += `<button class="admin-btn admin-btn-ghost" onclick="changePage(${totalPages})">${totalPages}</button>`;
+
+            html += `<button class="admin-btn admin-btn-ghost" ${currentPage >= totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">Следваща →</button>`;
+            container.innerHTML = html;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            loadEvaluations();
+        }
+
+        async function deleteEvaluation(id) {
+            if (!await confirmModal('Изтриване', `Сигурни ли сте, че искате да изтриете оценка #${id}?`)) return;
+            try {
+                await apiFetch(`/evaluations/${id}`, { method: 'DELETE' });
+                showToast('Оценката е изтрита', 'success');
+                loadEvaluations();
+            } catch(e) {
+                showToast('Грешка: ' + e.message);
+            }
+        }
+
+        function doSearch() {
+            searchQuery = document.getElementById('search-input').value;
+            domainFilter = document.getElementById('domain-filter').value;
+            currentPage = 1;
+            loadEvaluations();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSidebar();
+            setupLogout();
+            loadDomains();
+            loadEvaluations();
+            document.getElementById('search-input').addEventListener('keyup', (e) => { if (e.key === 'Enter') doSearch(); });
+        });
+    </script>
+</body>
+</html>
