@@ -71,14 +71,14 @@
 
     // Domain accent colors for badge styling
     const DOMAIN_COLORS = {
+        'news.bg': '#3b82f6',
         'money.bg': '#f59e0b',
-        'dnevnik.bg': '#3b82f6',
-        'capital.bg': '#ef4444',
-        'mediapool.bg': '#10b981',
-        'investor.bg': '#8b5cf6',
-        'bloomberg.bg': '#06b6d4',
-        'economy.bg': '#f97316',
-        'forbes.bg': '#ec4899'
+        'infostock.bg': '#8b5cf6',
+        'topsport.bg': '#22c55e',
+        'lifestyle.bg': '#ec4899',
+        'chr.bg': '#06b6d4',
+        'webcafe.bg': '#f97316',
+        'mamamia.bg': '#ef4444'
     };
 
     // --- Helper Functions ---
@@ -246,7 +246,7 @@
         // Score Cards
         scoreCardsContainer.innerHTML = '';
         SCORE_ORDER.forEach(key => {
-            const score = evaluation.scores[key];
+            const score = evaluation[key];
             if (score != null) {
                 const card = renderScoreCard(key, score, SCORE_WEIGHTS[key]);
                 scoreCardsContainer.appendChild(card);
@@ -276,16 +276,19 @@
 
         // Justifications
         justificationsList.innerHTML = '';
-        const justifications = evaluation.justifications || {};
-        Object.entries(justifications).forEach(([key, text]) => {
-            const label = JUSTIFICATION_LABELS[key] || key;
-            const item = document.createElement('div');
-            item.className = 'justification-item';
-            item.innerHTML = `
-                <div class="justification-label">${label}</div>
-                <div class="justification-text">${escapeHtml(text)}</div>
-            `;
-            justificationsList.appendChild(item);
+        const justKeys = ['originality_reason', 'significance_reason', 'domain_specific_reason'];
+        justKeys.forEach(key => {
+            const text = evaluation[key];
+            if (text) {
+                const label = JUSTIFICATION_LABELS[key] || key;
+                const item = document.createElement('div');
+                item.className = 'justification-item';
+                item.innerHTML = `
+                    <div class="justification-label">${label}</div>
+                    <div class="justification-text">${escapeHtml(text)}</div>
+                `;
+                justificationsList.appendChild(item);
+            }
         });
 
         // Reset collapsible states
@@ -327,7 +330,6 @@
 
         allVersions.forEach((ver, index) => {
             const verEval = ver.evaluation || {};
-            const scores = verEval.scores || {};
             const overallScore = verEval.final_overall_score;
 
             // Determine the next newer version for comparison
@@ -347,7 +349,7 @@
             // Build score items
             let scoresHtml = '';
             SCORE_ORDER.forEach(key => {
-                const score = scores[key];
+                const score = verEval[key];
                 if (score != null) {
                     const label = SCORE_LABELS[key] || key;
                     scoresHtml += `
