@@ -70,6 +70,49 @@ def _clean_paragraph(tag) -> str:
     return text.strip()
 
 
+# Patterns for lines that are image captions or source credits
+_JUNK_LINE_PATTERNS = [
+    re.compile(r'^Снимка\s*\d+', re.IGNORECASE),
+    re.compile(r'^Източник:\s', re.IGNORECASE),
+    re.compile(r'^Фото:\s', re.IGNORECASE),
+    re.compile(r'^Автор на снимката:', re.IGNORECASE),
+    re.compile(r'^Снимка:', re.IGNORECASE),
+    re.compile(r'^\(снимка\)', re.IGNORECASE),
+    re.compile(r'^iStock$', re.IGNORECASE),
+    re.compile(r'^Getty Images$', re.IGNORECASE),
+    re.compile(r'^Shutterstock$', re.IGNORECASE),
+]
+
+
+def _postprocess_text(text: str) -> str:
+    """Clean up extracted article text:
+    - Remove duplicate consecutive paragraphs (from related-article widgets)
+    - Remove image caption lines
+    - Remove very short standalone lines that look like captions
+    """
+    paragraphs = text.split('\n\n')
+    cleaned = []
+    prev = None
+
+    for p in paragraphs:
+        p = p.strip()
+        if not p:
+            continue
+
+        # Skip exact duplicate of previous paragraph (widget titles)
+        if p == prev:
+            continue
+
+        # Skip image caption/source lines
+        if any(pat.search(p) for pat in _JUNK_LINE_PATTERNS):
+            continue
+
+        cleaned.append(p)
+        prev = p
+
+    return '\n\n'.join(cleaned)
+
+
 def _strip_junk_blocks(container):
     """Remove non-content blocks from an article container.
 
@@ -233,14 +276,17 @@ def scrape_article(url: str) -> dict:
         except ScrapingError:
             logger.warning("BS4 резервен метод също се провали за %s", url)
 
-    # 3. Final validation -------------------------------------------------
+    # 3. Post-process text (remove widget titles, image captions) ----------
+    result["text"] = _postprocess_text(result.get("text", ""))
+
+    # 4. Final validation -------------------------------------------------
     if len(result.get("text", "")) < _MIN_TEXT_LENGTH:
         raise ScrapingError(
             f"Не може да се извлече достатъчно текст от {url} "
             f"(получени {len(result.get('text', ''))} символа)"
         )
 
-    # 4. Enrich with url & domain -----------------------------------------
+    # 5. Enrich with url & domain -----------------------------------------
     result["url"] = url
     result["domain"] = extract_domain(url)
 
