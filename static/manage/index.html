@@ -122,7 +122,7 @@
                 const tbody = document.getElementById('recent-evaluations');
                 tbody.innerHTML = items.map(ev => `
                     <tr>
-                        <td><a href="/manage/evaluation-detail?id=${ev.id}" style="color: var(--text-primary); text-decoration: none;">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 50))}${(ev.title_scraped || '').length > 50 ? '...' : ''}</a></td>
+                        <td><a href="/manage/evaluations/${ev.id}" style="color: var(--text-primary); text-decoration: none;">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 50))}${(ev.title_scraped || '').length > 50 ? '...' : ''}</a></td>
                         <td><span style="color: ${scoreColor(ev.final_overall_score)}; font-weight: 700;">${ev.final_overall_score?.toFixed(1) || '—'}</span></td>
                         <td style="color: var(--text-muted);">${formatDate(ev.evaluated_at)}</td>
                     </tr>

@@ -70,7 +70,7 @@
             trust_reason: 'Доверие и източници'
         };
 
-        const evalId = new URLSearchParams(window.location.search).get('id');
+        const evalId = window.location.pathname.split('/').filter(Boolean).pop();
 
         function truncateUrl(url, maxLen = 70) {
             if (!url) return '—';

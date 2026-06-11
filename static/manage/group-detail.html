@@ -102,7 +102,7 @@ async function loadGroup() {
                 <td style="color: var(--text-primary); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(u.title || '—')}</td>
                 <td>${u.score != null ? `<span style="color: ${scoreColor(u.score)}; font-weight: 700;">${u.score.toFixed(1)}</span>` : '—'}</td>
                 <td style="color: var(--red); font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(u.error || '')}">${u.error ? escapeHtml(u.error) : ''}</td>
-                <td>${u.evaluation_id ? `<a href="/manage/evaluation-detail?id=${u.evaluation_id}" class="admin-btn admin-btn-ghost admin-btn-sm">Виж →</a>` : ''}</td>
+                <td>${u.evaluation_id ? `<a href="/manage/evaluations/${u.evaluation_id}" class="admin-btn admin-btn-ghost admin-btn-sm">Виж →</a>` : ''}</td>
             </tr>
         `).join('');
 

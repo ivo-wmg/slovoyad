@@ -99,7 +99,7 @@
                 tbody.innerHTML = items.map(ev => `
                     <tr>
                         <td style="color: var(--text-muted);">${ev.id}</td>
-                        <td><a href="/manage/evaluation-detail?id=${ev.id}" style="color: var(--text-primary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--text-primary)'">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 60))}${(ev.title_scraped || '').length > 60 ? '...' : ''}</a></td>
+                        <td><a href="/manage/evaluations/${ev.id}" style="color: var(--text-primary); text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--text-primary)'">${escapeHtml((ev.title_scraped || 'Без заглавие').substring(0, 60))}${(ev.title_scraped || '').length > 60 ? '...' : ''}</a></td>
                         <td><span class="admin-badge admin-badge-blue">${escapeHtml(ev.domain || '—')}</span></td>
                         <td><span style="color: ${scoreColor(ev.final_overall_score)}; font-weight: 700;">${ev.final_overall_score?.toFixed(1) || '—'}</span></td>
                         <td style="color: var(--text-muted);">v${ev.version || 1}</td>
