@@ -2,6 +2,7 @@
 Slovoyad — Article Evaluation Web App
 FastAPI application with evaluation, history, and deploy endpoints.
 """
+from __future__ import annotations
 
 import os
 import hmac
@@ -101,37 +102,20 @@ async def api_evaluate(request: EvaluateRequest):
     # 6. Build response with version history
     try:
         all_versions = get_all_versions(url)
-        current_data = all_versions[0] if all_versions else None
-
         current_response = EvaluationResponse(
             evaluation=evaluation,
             version=version,
-            evaluated_at=current_data["evaluated_at"].isoformat() if current_data else "",
+            evaluated_at=all_versions[0]["evaluated_at"] if all_versions else "",
             url=url,
         )
 
         previous_responses = []
         for v in all_versions[1:]:
-            prev_eval = ArticleEvaluation(
-                domain=v["domain"],
-                title_scraped=v["title_scraped"] or "",
-                classification=v["classification"] or "",
-                scores={
-                    "originality": v["originality"],
-                    "significance_locality": v["significance_locality"],
-                    "quality_and_depth": v["quality_and_depth"],
-                    "trust_and_sources": v["trust_and_sources"],
-                    "domain_specific_score": v["domain_specific_score"],
-                },
-                final_overall_score=float(v["final_overall_score"]),
-                justifications=json.loads(v["justifications"]) if isinstance(v["justifications"], str) else v["justifications"],
-                strengths=json.loads(v["strengths"]) if isinstance(v["strengths"], str) else v["strengths"],
-                weaknesses=json.loads(v["weaknesses"]) if isinstance(v["weaknesses"], str) else v["weaknesses"],
-            )
+            prev_eval = _db_row_to_evaluation(v)
             previous_responses.append(EvaluationResponse(
                 evaluation=prev_eval,
                 version=v["version"],
-                evaluated_at=v["evaluated_at"].isoformat() if v.get("evaluated_at") else "",
+                evaluated_at=v.get("evaluated_at", ""),
                 url=url,
             ))
 
@@ -174,26 +158,11 @@ async def api_history(url: str):
 
     responses = []
     for v in all_versions:
-        eval_obj = ArticleEvaluation(
-            domain=v["domain"],
-            title_scraped=v["title_scraped"] or "",
-            classification=v["classification"] or "",
-            scores={
-                "originality": v["originality"],
-                "significance_locality": v["significance_locality"],
-                "quality_and_depth": v["quality_and_depth"],
-                "trust_and_sources": v["trust_and_sources"],
-                "domain_specific_score": v["domain_specific_score"],
-            },
-            final_overall_score=float(v["final_overall_score"]),
-            justifications=json.loads(v["justifications"]) if isinstance(v["justifications"], str) else v["justifications"],
-            strengths=json.loads(v["strengths"]) if isinstance(v["strengths"], str) else v["strengths"],
-            weaknesses=json.loads(v["weaknesses"]) if isinstance(v["weaknesses"], str) else v["weaknesses"],
-        )
+        eval_obj = _db_row_to_evaluation(v)
         responses.append(EvaluationResponse(
             evaluation=eval_obj,
             version=v["version"],
-            evaluated_at=v["evaluated_at"].isoformat() if v.get("evaluated_at") else "",
+            evaluated_at=v.get("evaluated_at", ""),
             url=url,
         ))
 
@@ -261,7 +230,7 @@ async def github_deploy(request: Request):
 
     # Run migrations
     migrate_result = subprocess.run(
-        ["python3.11", "migrate.py"],
+        ["python3.9", "migrate.py"],
         cwd=BASE_DIR,
         capture_output=True,
         text=True,
@@ -282,3 +251,37 @@ async def github_deploy(request: Request):
         "migrations": migrate_result.stdout.strip(),
         "migration_errors": migrate_result.stderr.strip() if migrate_result.stderr else None,
     }
+
+
+# --- Helpers ---
+
+def _db_row_to_evaluation(row: dict) -> ArticleEvaluation:
+    """Convert a database row dict to an ArticleEvaluation model."""
+    justifications = row.get("justifications", {})
+    if isinstance(justifications, str):
+        justifications = json.loads(justifications)
+
+    strengths = row.get("strengths", [])
+    if isinstance(strengths, str):
+        strengths = json.loads(strengths)
+
+    weaknesses = row.get("weaknesses", [])
+    if isinstance(weaknesses, str):
+        weaknesses = json.loads(weaknesses)
+
+    return ArticleEvaluation(
+        domain=row.get("domain", ""),
+        title_scraped=row.get("title_scraped", ""),
+        classification=row.get("classification", ""),
+        originality=row.get("originality", 5),
+        significance_locality=row.get("significance_locality", 5),
+        quality_and_depth=row.get("quality_and_depth", 5),
+        trust_and_sources=row.get("trust_and_sources", 5),
+        domain_specific_score=row.get("domain_specific_score", 5),
+        final_overall_score=float(row.get("final_overall_score", 5.0)),
+        originality_reason=justifications.get("originality_reason", ""),
+        significance_reason=justifications.get("significance_reason", ""),
+        domain_specific_reason=justifications.get("domain_specific_reason", ""),
+        strengths=strengths if isinstance(strengths, list) else [],
+        weaknesses=weaknesses if isinstance(weaknesses, list) else [],
+    )

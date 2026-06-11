@@ -2,6 +2,7 @@
 Slovoyad — Utility Functions
 URL parsing, logging setup, and display helpers.
 """
+from __future__ import annotations
 
 import logging
 from urllib.parse import urlparse

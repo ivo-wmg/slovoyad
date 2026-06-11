@@ -1,6 +1,7 @@
 """
 Slovoyad Article Evaluator - Gemini API client for structured article evaluation.
 """
+from __future__ import annotations
 
 import json
 import time
@@ -10,6 +11,7 @@ from google import genai
 from google.genai import errors as genai_errors
 
 from config import GEMINI_API_KEY, GEMINI_MODEL, SCORING_WEIGHTS
+from config import get_db_config  # noqa: F401 – re-exported for convenience
 from models import ArticleEvaluation
 from prompts import build_evaluation_prompt, SYSTEM_INSTRUCTION
 from domains import DomainConfig
@@ -129,11 +131,11 @@ class ArticleEvaluator:
                  quality=10%, significance=10%
         """
         score = (
-            result.domain_specific_score * SCORING_WEIGHTS['domain_specific']
-            + result.originality_score * SCORING_WEIGHTS['originality']
-            + result.trust_score * SCORING_WEIGHTS['trust']
-            + result.quality_score * SCORING_WEIGHTS['quality']
-            + result.significance_score * SCORING_WEIGHTS['significance']
+            result.domain_specific_score * SCORING_WEIGHTS['domain_specific_score']
+            + result.originality * SCORING_WEIGHTS['originality']
+            + result.trust_and_sources * SCORING_WEIGHTS['trust_and_sources']
+            + result.quality_and_depth * SCORING_WEIGHTS['quality_and_depth']
+            + result.significance_locality * SCORING_WEIGHTS['significance_locality']
         )
         return round(score, 2)
 
