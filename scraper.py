@@ -169,7 +169,11 @@ def _strip_junk_blocks(container):
         '.newsletter, .promo, .ad, .comments, '
         '.reference-article, .global-leading-articles-big, '
         '.global-leading-articles, .related-articles, .related, '
-        '.article_embed'
+        '.article_embed, '
+        '#comment-section, #comments, .comments_list, '
+        '.comments_ul_wrapper, .user-comment, '
+        '.disqus_thread, #disqus_thread, '
+        '.fb-comments, .comment-section, .comments-area'
     ):
         junk.decompose()
 
@@ -236,9 +240,15 @@ def _extract_via_newspaper(url: str) -> dict:
         article_html = getattr(article, 'article_html', '') or ''
         if article_html:
             soup = BeautifulSoup(article_html, "html.parser")
-            # Remove all div/section/aside/figure/nav elements
+            # Remove non-content blocks: divs, comments, widgets
             for tag in soup.find_all(['div', 'section', 'aside', 'figure', 'nav',
                                        'script', 'style', 'iframe']):
+                tag.decompose()
+            for tag in soup.select(
+                '#comment-section, #comments, .comments, .comments_list, '
+                '.comments_ul_wrapper, .user-comment, .comment-section, '
+                '.comments-area, .disqus_thread, #disqus_thread, .fb-comments'
+            ):
                 tag.decompose()
             paragraphs = [p for p in soup.find_all('p') if _is_content_paragraph(p)]
             if paragraphs:
