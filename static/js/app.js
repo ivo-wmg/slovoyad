@@ -356,10 +356,10 @@
         // Show results
         resultsSection.classList.remove('hidden');
 
-        // Show copy link button if eval has an ID
+        // Show/hide copy link button based on eval ID
         currentEvalId = current.id || null;
-        if (currentEvalId && copyLinkBtn) {
-            copyLinkBtn.style.display = '';
+        if (copyLinkBtn) {
+            copyLinkBtn.style.display = currentEvalId ? '' : 'none';
         }
 
         // Re-trigger animations
