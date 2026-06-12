@@ -281,13 +281,12 @@ def _extract_via_bs4(html: str) -> dict:
 
     # --- Title -----------------------------------------------------------
     title = ""
-    h1 = soup.find("h1")
+    # 1. Prefer h1 with itemprop="headline"
+    h1 = soup.find("h1", attrs={"itemprop": "headline"})
+    if not h1:
+        h1 = soup.find("h1")
     if h1:
         title = h1.get_text(strip=True)
-    if not title:
-        og_title = soup.find("meta", property="og:title")
-        if og_title and og_title.get("content"):
-            title = og_title["content"].strip()
 
     # --- Body text -------------------------------------------------------
     text = ""
@@ -390,8 +389,8 @@ def scrape_article(url: str) -> dict:
             html = _fetch_html(url)
             bs4_result = _extract_via_bs4(html)
 
-            # Merge: prefer non-empty values from BS4
-            if not result["title"] and bs4_result["title"]:
+            # Merge: prefer BS4's h1 title over newspaper's (which may be from og:title)
+            if bs4_result["title"]:
                 result["title"] = bs4_result["title"]
             if len(bs4_result["text"]) > len(result.get("text", "")):
                 result["text"] = bs4_result["text"]
