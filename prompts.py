@@ -259,12 +259,17 @@ def build_evaluation_prompt(
         meta_parts.append(f"Дата: {date}")
     meta_block = "\n".join(meta_parts)
 
+    # Current date for temporal context
+    from datetime import date as _date
+    today = _date.today().strftime('%d.%m.%Y')
+
     # Сглобяване на промпта
     prompt = dedent(f"""\
         ╔══════════════════════════════════════════════════════════════╗
         ║          SLOVOYAD — ОЦЕНКА НА МЕДИЙНА ПУБЛИКАЦИЯ           ║
         ╚══════════════════════════════════════════════════════════════╝
 
+        Днешна дата: {today}
         Домейн: {domain_config.name} ({domain_config.category})
 
         ──────────────────────────────────────────────────────────────
