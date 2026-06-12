@@ -65,11 +65,19 @@ async def public_evaluation(eval_id: int):
 
 @app.get("/api/evaluations/{eval_id}")
 async def api_evaluation_public(eval_id: int):
-    """Return a stored evaluation by ID (public, no auth)."""
-    from database import get_evaluation_by_id
+    """Return a stored evaluation by ID (public, no auth), with version history."""
+    from database import get_evaluation_by_id, get_all_versions
     evaluation = get_evaluation_by_id(eval_id)
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluation not found")
+    # Include version history for the same URL
+    url = evaluation.get("url", "")
+    all_versions = get_all_versions(url) if url else []
+    evaluation["version_history"] = [
+        {"id": v.get("id"), "version": v.get("version"), "evaluated_at": v.get("evaluated_at"),
+         "final_overall_score": v.get("final_overall_score")}
+        for v in all_versions
+    ]
     return evaluation
 
 

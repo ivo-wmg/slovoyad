@@ -668,6 +668,24 @@
                 Object.assign(ev, justs);
 
                 // Build data structure that renderResults expects
+                const versionHistory = ev.version_history || [];
+                const versions = versionHistory.map(v => ({
+                    version: v.version,
+                    evaluated_at: v.evaluated_at,
+                    id: v.id,
+                    final_overall_score: v.final_overall_score,
+                }));
+
+                // Build previous_versions for history display
+                const previousVersions = versionHistory
+                    .filter(v => v.id !== ev.id)
+                    .map(v => ({
+                        version: v.version,
+                        evaluated_at: v.evaluated_at,
+                        id: v.id,
+                        evaluation: { final_overall_score: v.final_overall_score },
+                    }));
+
                 const data = {
                     current: {
                         url: ev.url,
@@ -676,7 +694,8 @@
                         evaluation: ev,
                         evaluated_at: ev.evaluated_at,
                     },
-                    versions: [{ version: ev.version || 1, evaluated_at: ev.evaluated_at }]
+                    previous_versions: previousVersions,
+                    versions: versions.length > 0 ? versions : [{ version: ev.version || 1, evaluated_at: ev.evaluated_at }],
                 };
 
                 renderResults(data);
