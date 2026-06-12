@@ -213,21 +213,11 @@ def _fetch_html(url: str) -> str:
             f"Мрежова грешка при заявка към {url}: {exc}"
         ) from exc
 
-    # Detect encoding: trust HTTP header first, then meta charset, fallback to UTF-8
-    if response.encoding and response.encoding.lower() not in ('iso-8859-1',):
-        # requests detected encoding from Content-Type header
-        pass
+    # infostock.bg uses windows-1251, everything else is UTF-8
+    if "infostock.bg" in url:
+        response.encoding = "windows-1251"
     else:
-        # Check meta charset in HTML (e.g. windows-1251 for infostock.bg)
-        import re
-        meta_match = re.search(
-            rb'charset=["\']?([a-zA-Z0-9_-]+)',
-            response.content[:2000]
-        )
-        if meta_match:
-            response.encoding = meta_match.group(1).decode('ascii')
-        else:
-            response.encoding = "utf-8"
+        response.encoding = "utf-8"
     return response.text
 
 
