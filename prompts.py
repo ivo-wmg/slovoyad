@@ -246,8 +246,13 @@ def build_evaluation_prompt(
     title = article_data.get("title", "(без заглавие)")
     text = article_data.get("text", "")
     url = article_data.get("url", "")
+    # Scraper returns 'authors' (list), handle both keys
     author = article_data.get("author", "")
-    date = article_data.get("date", "")
+    if not author:
+        authors = article_data.get("authors", [])
+        if authors:
+            author = ", ".join(authors) if isinstance(authors, list) else str(authors)
+    date = article_data.get("date", "") or article_data.get("publish_date", "")
 
     # Метаданни блок
     meta_parts = [f"Заглавие: {title}"]
