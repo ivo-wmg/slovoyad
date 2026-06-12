@@ -334,16 +334,6 @@
         // Spelling Errors
         renderSpellingErrors(evaluation);
 
-        // Open all collapsible sections by default
-        justificationsToggle.setAttribute('aria-expanded', 'true');
-        justificationsContent.classList.add('open');
-        historyToggle.setAttribute('aria-expanded', 'true');
-        historyContent.classList.add('open');
-        aiDetectionToggle.setAttribute('aria-expanded', 'true');
-        aiDetectionContent.classList.add('open');
-        spellingToggle.setAttribute('aria-expanded', 'true');
-        spellingContent.classList.add('open');
-
         // Version History
         renderVersionHistory(data, evaluation);
 
@@ -361,6 +351,16 @@
             el.style.animation = 'none';
             el.offsetHeight; // force reflow
             el.style.animation = '';
+        });
+
+        // Open all collapsible sections by default (after DOM is visible)
+        requestAnimationFrame(() => {
+            [justificationsToggle, historyToggle, aiDetectionToggle, spellingToggle].forEach(t => {
+                if (t) t.setAttribute('aria-expanded', 'true');
+            });
+            [justificationsContent, historyContent, aiDetectionContent, spellingContent].forEach(c => {
+                if (c) c.classList.add('open');
+            });
         });
     }
 
