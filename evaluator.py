@@ -43,7 +43,18 @@ class ArticleEvaluator:
         """
         prompt = build_evaluation_prompt(article_data, domain_config)
 
+        # --- TEMP DEBUG LOG ---
+        logger.info("=== PROMPT SENT TO GEMINI (first 2000 chars) ===")
+        logger.info(prompt[:2000])
+        logger.info("=== END PROMPT ===")
+
         response = self._call_with_retry(prompt)
+
+        # --- TEMP DEBUG LOG ---
+        logger.info("=== RAW GEMINI RESPONSE ===")
+        logger.info(response.text[:3000] if response.text else "(empty)")
+        logger.info("=== END RESPONSE ===")
+
         result = self._parse_response(response)
         result.final_overall_score = self._recalculate_score(result)
 
