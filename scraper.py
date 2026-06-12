@@ -378,7 +378,35 @@ def scrape_article(url: str) -> dict:
     # 1. Try newspaper (primary) -------------------------------------------
     result = _extract_via_newspaper(url)
 
-    # 2. Fallback to BS4 if text is missing / too short -------------------
+    # 2. Always extract h1 title from HTML (newspaper may truncate <title>)
+    html = None
+    try:
+        html = _fetch_html(url)
+        soup = BeautifulSoup(html, "html.parser")
+        h1 = soup.find("h1", attrs={"itemprop": "headline"}) or soup.find("h1")
+        if h1:
+            h1_title = h1.get_text(strip=True)
+            if h1_title:
+                result["title"] = h1_title
+        # If h1 is empty (JS-rendered), use <title> tag with site name stripped
+        if not result.get("title") or result["title"] == "":
+            title_tag = soup.find("title")
+            if title_tag:
+                raw_title = title_tag.get_text(strip=True)
+                # Strip common site name suffixes: " - Topsport.bg", " | News.bg", etc.
+                for sep in [" - ", " | ", " – "]:
+                    if sep in raw_title:
+                        parts = raw_title.rsplit(sep, 1)
+                        # Only strip if the last part looks like a site name (short, has dot)
+                        if len(parts) == 2 and ("." in parts[1] or len(parts[1]) < 30):
+                            raw_title = parts[0].strip()
+                            break
+                if raw_title:
+                    result["title"] = raw_title
+    except Exception:
+        pass  # title from newspaper is still usable
+
+    # 3. Fallback to BS4 if text/metadata is missing -----------------------
     needs_text = len(result.get("text", "")) < _MIN_TEXT_LENGTH
     needs_meta = not result.get("authors") or not result.get("publish_date")
 
@@ -386,12 +414,10 @@ def scrape_article(url: str) -> dict:
         if needs_text:
             logger.info("newspaper върна кратък текст – превключване към BS4 за %s", url)
         try:
-            html = _fetch_html(url)
+            if not html:
+                html = _fetch_html(url)
             bs4_result = _extract_via_bs4(html)
 
-            # Merge: prefer BS4's h1 title over newspaper's (which may be from og:title)
-            if bs4_result["title"]:
-                result["title"] = bs4_result["title"]
             if len(bs4_result["text"]) > len(result.get("text", "")):
                 result["text"] = bs4_result["text"]
             if not result.get("authors") and bs4_result.get("authors"):
