@@ -21,6 +21,8 @@
     const versionBadge = document.getElementById('version-badge');
     const classificationBadge = document.getElementById('classification-badge');
     const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    let currentEvalId = null;
 
     const scoreCardsContainer = document.getElementById('score-cards');
     const overallScoreValue = document.getElementById('overall-score-value');
@@ -605,8 +607,6 @@
         });
     }
     // --- Copy Link ---
-    let currentEvalId = null;
-    const copyLinkBtn = document.getElementById('copy-link-btn');
 
     copyLinkBtn.addEventListener('click', () => {
         if (!currentEvalId) return;

@@ -310,9 +310,8 @@ body {
     font-size: 0.78rem;
     color: var(--text-muted);
     text-decoration: none;
-    word-break: break-all;
     transition: color var(--transition);
-    max-width: 500px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
