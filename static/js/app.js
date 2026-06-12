@@ -311,6 +311,22 @@
             weaknessesList.appendChild(li);
         });
 
+        // Recommendations
+        const recsSection = document.getElementById('recommendations-section');
+        const recsList = document.getElementById('recommendations-list');
+        const recs = evaluation.recommendations || [];
+        if (recs.length > 0 && recsSection && recsList) {
+            recsList.innerHTML = '';
+            recs.forEach(r => {
+                const li = document.createElement('li');
+                li.textContent = r;
+                recsList.appendChild(li);
+            });
+            recsSection.classList.remove('hidden');
+        } else if (recsSection) {
+            recsSection.classList.add('hidden');
+        }
+
         // Justifications
         justificationsList.innerHTML = '';
         const justKeys = ['originality_reason', 'significance_reason', 'quality_reason', 'trust_reason', 'domain_specific_reason'];
@@ -642,6 +658,9 @@
                 }
                 if (typeof ev.spelling_errors === 'string') {
                     try { ev.spelling_errors = JSON.parse(ev.spelling_errors); } catch(e) {}
+                }
+                if (typeof ev.recommendations === 'string') {
+                    try { ev.recommendations = JSON.parse(ev.recommendations); } catch(e) {}
                 }
 
                 // Flatten justifications into evaluation

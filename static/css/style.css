@@ -925,6 +925,49 @@ body {
     }
 }
 
+/* --- Recommendations Section --- */
+.recommendations-section {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem 1.5rem;
+}
+
+.recommendations-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f59e0b;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.recommendations-title svg {
+    color: #f59e0b;
+}
+
+.recommendations-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.recommendations-list li {
+    padding: 0.6rem 0.85rem;
+    background: rgba(245, 158, 11, 0.06);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    border-left: 3px solid #f59e0b;
+    line-height: 1.5;
+}
+
+.recommendations-list li::before {
+    content: "💡 ";
+}
+
 /* --- AI Detection Section --- */
 .ai-detection-section {
     margin-bottom: 1.5rem;

@@ -223,6 +223,26 @@
                     </div>
                 </div>`;
             }
+            // Recommendations
+            let recs = ev.recommendations || [];
+            if (typeof recs === 'string') {
+                try { recs = JSON.parse(recs); } catch(e) { recs = []; }
+            }
+            if (Array.isArray(recs) && recs.length) {
+                html += `
+                <div class="admin-card fade-in">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: #f59e0b; display: flex; align-items: center; gap: 0.5rem;">
+                        ${icon('pencil')} Препоръки за подобрение
+                        <span class="admin-badge admin-badge-yellow" style="margin-left: 0.5rem;">${recs.length}</span>
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        ${recs.map(r => `
+                        <div style="padding: 0.6rem 0.85rem; background: rgba(245,158,11,0.06); border-radius: 0.5rem; border-left: 3px solid #f59e0b; color: var(--text-primary); font-size: 0.9rem; line-height: 1.5;">
+                            💡 ${escapeHtml(r)}
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
 
             // AI Detection
             if (ev.ai_probability != null || ev.ai_reasoning) {

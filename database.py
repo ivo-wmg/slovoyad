@@ -66,7 +66,7 @@ def _row_to_dict(row: dict) -> Optional[dict]:
     if row is None:
         return None
     row = dict(row)
-    for field in ("justifications", "strengths", "weaknesses", "spelling_errors", "raw_response"):
+    for field in ("justifications", "strengths", "weaknesses", "recommendations", "spelling_errors", "raw_response"):
         if field in row:
             row[field] = _deserialize_json(row[field])
     # Convert datetime objects to ISO strings for JSON-safety
@@ -107,7 +107,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     originality, significance_locality,
                     quality_and_depth, trust_and_sources,
                     domain_specific_score, final_overall_score,
-                    justifications, strengths, weaknesses,
+                    justifications, strengths, weaknesses, recommendations,
                     ai_probability, ai_reasoning, confidence,
                     spelling_errors,
                     raw_response
@@ -117,7 +117,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     %s, %s,
                     %s, %s,
                     %s, %s,
-                    %s, %s, %s,
+                    %s, %s, %s, %s,
                     %s, %s, %s,
                     %s,
                     %s
@@ -145,6 +145,7 @@ def save_evaluation(url: str, evaluation: dict) -> int:
                     }),
                     _serialize_json(evaluation.get("strengths")),
                     _serialize_json(evaluation.get("weaknesses")),
+                    _serialize_json(evaluation.get("recommendations", [])),
                     evaluation.get("ai_probability", 0),
                     evaluation.get("ai_reasoning", ""),
                     evaluation.get("confidence", None),
