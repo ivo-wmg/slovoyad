@@ -61,12 +61,39 @@ import re
 _MULTI_SPACE = re.compile(r'[ \t]+')
 
 
+_INLINE_TAGS = frozenset([
+    'a', 'abbr', 'b', 'bdi', 'bdo', 'cite', 'code', 'data',
+    'del', 'dfn', 'em', 'i', 'ins', 'kbd', 'mark', 'q', 's',
+    'samp', 'small', 'span', 'strong', 'sub', 'sup', 'time',
+    'u', 'var', 'wbr',
+])
+
+
 def _clean_paragraph(tag) -> str:
-    """Extract text from a BS4 tag, adding spaces between child elements
-    to prevent word merging (e.g. <a>нещо</a>е → 'нещо е' not 'нещое').
+    """Extract text from a BS4 tag, preserving inline flow.
+
+    Only block-level children get a space separator; inline tags
+    (b, strong, em, a, span …) are concatenated without extra spaces
+    so that 'щ<b>е</b>' stays 'ще', not 'щ е'.
     """
-    text = tag.get_text(separator=' ')
+    from bs4 import NavigableString, Tag
+
+    parts: list[str] = []
+    for child in tag.children:
+        if isinstance(child, NavigableString):
+            parts.append(str(child))
+        elif isinstance(child, Tag):
+            child_text = _clean_paragraph(child)  # recurse
+            if child.name in _INLINE_TAGS:
+                parts.append(child_text)
+            else:
+                parts.append(f' {child_text} ')
+
+    text = ''.join(parts)
+    # Collapse whitespace but keep single newlines
     text = _MULTI_SPACE.sub(' ', text)
+    # Fix spaces before punctuation (scraping artifacts)
+    text = re.sub(r'\s+([,\.;:!\?\)])', r'\1', text)
     return text.strip()
 
 
