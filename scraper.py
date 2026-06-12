@@ -61,39 +61,28 @@ import re
 _MULTI_SPACE = re.compile(r'[ \t]+')
 
 
-_INLINE_TAGS = frozenset([
-    'a', 'abbr', 'b', 'bdi', 'bdo', 'cite', 'code', 'data',
-    'del', 'dfn', 'em', 'i', 'ins', 'kbd', 'mark', 'q', 's',
-    'samp', 'small', 'span', 'strong', 'sub', 'sup', 'time',
-    'u', 'var', 'wbr',
-])
+
+
 
 
 def _clean_paragraph(tag) -> str:
-    """Extract text from a BS4 tag, preserving inline flow.
+    """Extract text from a BS4 <p> tag by concatenating content directly.
 
-    Only block-level children get a space separator; inline tags
-    (b, strong, em, a, span …) are concatenated without extra spaces
-    so that 'щ<b>е</b>' stays 'ще', not 'щ е'.
+    Since <p> tags only contain inline elements, we don't add extra
+    spaces — the original text nodes already have them. Only <br> tags
+    introduce a space break.
     """
     from bs4 import NavigableString, Tag
 
     parts: list[str] = []
-    for child in tag.children:
+    for child in tag.descendants:
         if isinstance(child, NavigableString):
             parts.append(str(child))
-        elif isinstance(child, Tag):
-            child_text = _clean_paragraph(child)  # recurse
-            if child.name in _INLINE_TAGS:
-                parts.append(child_text)
-            else:
-                parts.append(f' {child_text} ')
+        elif isinstance(child, Tag) and child.name == 'br':
+            parts.append(' ')
 
     text = ''.join(parts)
-    # Collapse whitespace but keep single newlines
     text = _MULTI_SPACE.sub(' ', text)
-    # Fix spaces before punctuation (scraping artifacts)
-    text = re.sub(r'\s+([,\.;:!\?\)])', r'\1', text)
     return text.strip()
 
 
