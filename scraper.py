@@ -219,10 +219,16 @@ def _fetch_html(url: str) -> str:
 
 
 def _extract_via_newspaper(url: str) -> dict:
-    """Primary extraction using newspaper4k."""
+    """Primary extraction using newspaper3k/4k."""
     try:
+        html = _fetch_html(url)
         article = Article(url, language="bg")
-        article.set_html(_fetch_html(url))
+        # newspaper4k uses set_html(), 3k uses download() or html=
+        if hasattr(article, 'set_html'):
+            article.set_html(html)
+        else:
+            article.html = html
+            article.is_downloaded = True
         article.parse()
 
         title = (article.title or "").strip()
@@ -304,11 +310,55 @@ def _extract_via_bs4(html: str) -> dict:
         if all_paragraphs:
             text = "\n\n".join(_clean_paragraph(p) for p in all_paragraphs if _clean_paragraph(p))
 
+    # --- Author ----------------------------------------------------------
+    authors = []
+    # 1. schema.org itemprop="author"
+    author_el = soup.find(attrs={"itemprop": "author"})
+    if author_el:
+        name_el = author_el.find(attrs={"itemprop": "name"})
+        author_name = (name_el.get_text(strip=True) if name_el
+                       else author_el.get_text(strip=True))
+        if author_name:
+            authors.append(author_name)
+    # 2. meta tags
+    if not authors:
+        for meta_name in ["author", "article:author"]:
+            meta = soup.find("meta", attrs={"name": meta_name}) or soup.find("meta", property=meta_name)
+            if meta and meta.get("content", "").strip():
+                authors.append(meta["content"].strip())
+                break
+    # 3. common CSS selectors
+    if not authors:
+        for sel in [".author-name", ".author", ".article-author", "[rel='author']"]:
+            el = soup.select_one(sel)
+            if el and el.get_text(strip=True):
+                authors.append(el.get_text(strip=True))
+                break
+
+    # --- Date ------------------------------------------------------------
+    publish_date = None
+    # 1. itemprop="datePublished"
+    date_el = soup.find(attrs={"itemprop": "datePublished"})
+    if date_el:
+        publish_date = date_el.get("content") or date_el.get("datetime") or date_el.get_text(strip=True)
+    # 2. meta tags
+    if not publish_date:
+        for prop in ["article:published_time", "datePublished", "date"]:
+            meta = soup.find("meta", property=prop) or soup.find("meta", attrs={"name": prop})
+            if meta and meta.get("content"):
+                publish_date = meta["content"]
+                break
+    # 3. <time> tag
+    if not publish_date:
+        time_el = soup.find("time", attrs={"datetime": True})
+        if time_el:
+            publish_date = time_el["datetime"]
+
     return {
         "title": title,
         "text": text.strip(),
-        "authors": [],
-        "publish_date": None,
+        "authors": authors,
+        "publish_date": publish_date,
     }
 
 
@@ -326,12 +376,16 @@ def scrape_article(url: str) -> dict:
     """
     logger.info("Извличане на статия: %s", url)
 
-    # 1. Try newspaper4k (primary) ----------------------------------------
+    # 1. Try newspaper (primary) -------------------------------------------
     result = _extract_via_newspaper(url)
 
     # 2. Fallback to BS4 if text is missing / too short -------------------
-    if len(result.get("text", "")) < _MIN_TEXT_LENGTH:
-        logger.info("newspaper4k върна кратък текст – превключване към BS4 за %s", url)
+    needs_text = len(result.get("text", "")) < _MIN_TEXT_LENGTH
+    needs_meta = not result.get("authors") or not result.get("publish_date")
+
+    if needs_text or needs_meta:
+        if needs_text:
+            logger.info("newspaper върна кратък текст – превключване към BS4 за %s", url)
         try:
             html = _fetch_html(url)
             bs4_result = _extract_via_bs4(html)
@@ -341,6 +395,10 @@ def scrape_article(url: str) -> dict:
                 result["title"] = bs4_result["title"]
             if len(bs4_result["text"]) > len(result.get("text", "")):
                 result["text"] = bs4_result["text"]
+            if not result.get("authors") and bs4_result.get("authors"):
+                result["authors"] = bs4_result["authors"]
+            if not result.get("publish_date") and bs4_result.get("publish_date"):
+                result["publish_date"] = bs4_result["publish_date"]
         except ScrapingError:
             logger.warning("BS4 резервен метод също се провали за %s", url)
 
